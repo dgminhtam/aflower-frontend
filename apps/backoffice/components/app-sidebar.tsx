@@ -25,15 +25,8 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@workspace/ui/components/sidebar"
-import type { User } from '@clerk/nextjs/server'
 
-// This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Acme Inc",
@@ -53,23 +46,19 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "PCM",
       url: "#",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Categories",
+          url: "/categories",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
+          title: "Products",
+          url: "/products",
+        }
       ],
     },
     {
