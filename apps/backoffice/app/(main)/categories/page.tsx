@@ -23,7 +23,6 @@ export default async function Page({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
     
-    // 3. AWAIT searchParams NGAY TẠI ĐÂY
     const searchParams = await searchParamsPromise;
     const { page = '0', size = '10', sort = '', ...searchFields } = searchParams;
     const categoriesPage = await getCategories(searchParams);
