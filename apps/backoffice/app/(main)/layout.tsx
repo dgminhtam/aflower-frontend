@@ -13,27 +13,15 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar";
-import { auth, currentUser } from '@clerk/nextjs/server'
 
 export default async function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isAuthenticated } = await auth();
-  if (!isAuthenticated) {
-    return <div>Sign in to view this page</div>;
-  }
-  const user = await currentUser();
-  const simpleUser = user ? {
-    imageUrl: user.imageUrl,
-    fullName: user.fullName,
-    username: user.username
-  } : null;
   return (
     <SidebarProvider>
-      <AppSidebar user={simpleUser} 
-            isAuthenticated={isAuthenticated}/>
+      <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">

@@ -145,18 +145,8 @@ const data = {
     },
   ],
 }
-type SimpleUser = {
-  imageUrl: string;
-  fullName: string | null;
-  username: string | null;
-} | null
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  user: SimpleUser
-  isAuthenticated: boolean
-}
-
-export function AppSidebar({ user, isAuthenticated, ...props }: AppSidebarProps) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -167,7 +157,7 @@ export function AppSidebar({ user, isAuthenticated, ...props }: AppSidebarProps)
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        {isAuthenticated && <NavUser user={user} />}
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

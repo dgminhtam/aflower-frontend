@@ -1,5 +1,3 @@
-// data.ts
-import { auth } from '@clerk/nextjs/server';
 import { URLSearchParams } from 'url';
 import { CategoryResponse } from '@/app/lib/admin/categories/definitions';
 import { buildFilterQuery, buildSortQuery } from '@/app/lib/admin/utils';
@@ -54,15 +52,6 @@ async function fetchWithTimeout<T>(
 export async function getCategories(
   searchParams: { [key: string]: string | string[] | undefined }
 ): Promise<CategoryResponse> {
-  const { getToken, userId } = await auth();
-  if (!userId) {
-    throw new Error('Chưa xác thực');
-  }
-
-  const token = await getToken({ template: 'aflower' });
-  if (!token) {
-    throw new Error('Không lấy được token');
-  }
 
   const baseUrl = process.env.API_BASE_URL;
   if (!baseUrl) {
@@ -97,7 +86,7 @@ export async function getCategories(
   const fullUrl = `${baseUrl.replace(/\/+$/, '')}/categories?${query.toString()}`;
 
   try {
-    const data = await fetchWithTimeout<CategoryResponse>(fullUrl, token);
+    const data = await fetchWithTimeout<CategoryResponse>(fullUrl, "token");
     return data;
   } catch (error) {
     console.error('Lỗi gọi API (getCategories):', { url: fullUrl, error });

@@ -11,7 +11,6 @@ Before you begin, ensure you have the following installed on your system:
 * **Node.js:** v20.x or higher
 * **pnpm:** v10.x or higher (Install with `npm install -g pnpm`)
 * **Java (JDK):** v17 or higher (for the backend API)
-* **Clerk Account:** You need API keys from [Clerk.com](https://clerk.com/).
 
 ---
 
@@ -35,18 +34,11 @@ Follow these steps to get the project running locally.
 
 ### 2. Environment Configuration
 
-This project uses Clerk for authentication and connects to a separate Java backend.
-
 1.  **Create a `.env` file** in the **root** of the monorepo (`/aflower-frontend/.env`).
 2.  Add your secret keys. These will be shared by Turborepo across all apps.
 
     ```ini
     # .env
-
-    # Clerk Authentication Keys (Shared by both apps)
-    # Get these from your Clerk Dashboard -> API Keys
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
-    CLERK_SECRET_KEY=sk_live_...
 
     # URL for the Java Backend API
     NEXT_PUBLIC_JAVA_API_BASE_URL=http://localhost:8080

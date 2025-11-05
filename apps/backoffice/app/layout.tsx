@@ -1,9 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from '@clerk/nextjs';
 import { Providers } from "@/components/providers";
+import { Auth0Provider } from "@auth0/nextjs-auth0";
 import "@workspace/ui/globals.css";
-
-import { shadcn } from '@clerk/themes'
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -21,17 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-          appearance={{
-        theme: shadcn,
-      }}> 
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
         >
-          <Providers>{children}</Providers>
+          <Auth0Provider>
+            <Providers>{children}</Providers>
+          </Auth0Provider>
         </body>
       </html>
-    </ClerkProvider>
   );
 }
