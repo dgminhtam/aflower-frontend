@@ -1,16 +1,20 @@
-import CreateCategoryForm from "@/components/create-category-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Separator } from "@workspace/ui/components/separator";
+import { getCategoryTree } from "@/app/lib/admin/categories/data";
+import CreateCategoryForm from "@/components/create-category-form"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
+import { Separator } from "@workspace/ui/components/separator"
+
 export default async function Page() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-xl">Tạo danh mục</CardTitle>
-            </CardHeader>
-            <Separator className="mb-4" />
-            <CardContent>
-                <CreateCategoryForm />
-            </CardContent>
-        </Card>
-    );
+  const categories = await getCategoryTree();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Tạo danh mục mới</CardTitle>
+        <CardDescription>Thêm một danh mục mới vào hệ thống. Hãy điền đầy đủ thông tin bên dưới.</CardDescription>
+      </CardHeader>
+      <Separator />
+      <CardContent className="pt-5">
+        <CreateCategoryForm categories={categories}/>
+      </CardContent>
+    </Card>
+  )
 }

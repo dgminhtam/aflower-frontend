@@ -9,11 +9,19 @@ import { Label } from "@workspace/ui/components/label"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import React, { useState } from "react"
+import { useState } from "react"
 import { CategorySelect } from "./category-select"
-import type { Category, CreateCategoryRequest, Media } from "@/app/lib/admin/categories/definitions"
+import type { Category } from "@/app/lib/admin/categories/definitions"
 import { ImageUpload } from "./image-upload"
-import { createCategory } from "@/app/lib/admin/categories/data"
+
+type UpdateCategoryRequest = {
+  name: string
+  description: string
+  slug: string
+  imageId?: number
+  active: boolean
+  parentId?: string
+}
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
@@ -37,7 +45,21 @@ const mockRouter = {
   },
 }
 
-function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
+interface UpdateCategoryFormProps {
+  categoryId: number
+  initialData: {
+    name: string
+    description: string
+    slug: string
+    imageId?: number
+    active: boolean
+    parentId?: string
+  }
+  categories: Category[]
+  onUpdateCategory: (id: number, data: UpdateCategoryRequest) => Promise<void>
+}
+
+function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdateCategory }: UpdateCategoryFormProps) {
   const router = mockRouter
   const [apiError, setApiError] = useState<string | null>(null)
   const [apiSuccess, setApiSuccess] = useState<string | null>(null)
@@ -45,12 +67,12 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      slug: "",
-      imageId: undefined,
-      active: true,
-      parentId: "",
+      name: initialData.name,
+      description: initialData.description,
+      slug: initialData.slug,
+      imageId: initialData.imageId,
+      active: initialData.active,
+      parentId: initialData.parentId,
     },
   })
 
@@ -62,29 +84,14 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
     setValue,
   } = form
 
-  const nameValue = watch("name")
-  const activeValue = watch("active")
+  const statusValue = watch("active")
   const parentIdValue = watch("parentId")
   const imageIdValue = watch("imageId")
-
-  React.useEffect(() => {
-    if (nameValue) {
-      const generatedSlug = nameValue
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]/g, "")
-      setValue("slug", generatedSlug)
-    }
-  }, [nameValue, setValue])
-
-  const handleImageUpload = (media: Media) => {
-    setValue("imageId", media.id)
-  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setApiError(null)
     setApiSuccess(null)
-    const createCategoryRequest: CreateCategoryRequest = {
+    const updateCategoryRequest: UpdateCategoryRequest = {
       name: values.name,
       description: values.description,
       slug: values.slug,
@@ -94,8 +101,8 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
     }
 
     try {
-      await createCategory(createCategoryRequest)
-      setApiSuccess("Tạo danh mục thành công!")
+      await onUpdateCategory(categoryId, updateCategoryRequest)
+      setApiSuccess("Cập nhật danh mục thành công!")
     } catch (error) {
       if (error instanceof Error) {
         setApiError(error.message)
@@ -146,20 +153,24 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
           />
 
           <div className="space-y-2">
-            <Label htmlFor="active">Trạng thái</Label>
+            <Label htmlFor="status">Trạng thái</Label>
             <div className="flex items-center justify-between px-4 bg-muted rounded-lg border border-border h-full">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium text-foreground">
-                  {activeValue ? "Đang hoạt động" : "Bị vô hiệu hóa"}
+                  {statusValue ? "Đang hoạt động" : "Bị vô hiệu hóa"}
                 </p>
               </div>
-              <Switch id="active" checked={activeValue} onCheckedChange={(checked) => setValue("active", checked)} />
+              <Switch id="status" checked={statusValue} onCheckedChange={(checked) => setValue("active", checked)} />
             </div>
           </div>
         </div>
       </div>
 
-      <ImageUpload value={imageIdValue} onChange={handleImageUpload} error={errors.imageId?.message} />
+      <ImageUpload
+        value={imageIdValue}
+        onChange={(value) => setValue("imageId", value)}
+        error={errors.imageId?.message}
+      />
 
       {apiSuccess && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -180,7 +191,7 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
               Đang lưu...
             </>
           ) : (
-            "Tạo"
+            "Cập nhật"
           )}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
@@ -191,4 +202,4 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
   )
 }
 
-export default CreateCategoryForm
+export default UpdateCategoryForm

@@ -66,3 +66,5 @@ This command uses Turborepo to run both `storefront` and `backoffice` in paralle
 ```bash
 # Run this from the ROOT directory
 pnpm dev
+cd .\packages\ui
+pnpm add @radix-ui/[missing]

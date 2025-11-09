@@ -30,7 +30,7 @@ export function SelectSort({ sortOptions }: SelectSortProps) {
 
     return (
         <Select onValueChange={handleSelectChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]"  size="sm">
                 <SelectValue placeholder="Sắp xếp theo" />
             </SelectTrigger>
             <SelectContent>
