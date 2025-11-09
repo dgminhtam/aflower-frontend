@@ -11,17 +11,9 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
 import { CategorySelect } from "./category-select"
-import type { Category } from "@/app/lib/admin/categories/definitions"
+import type { Category, Media, UpdateCategoryRequest } from "@/app/lib/admin/categories/definitions"
 import { ImageUpload } from "./image-upload"
-
-type UpdateCategoryRequest = {
-  name: string
-  description: string
-  slug: string
-  imageId?: number
-  active: boolean
-  parentId?: string
-}
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
@@ -36,22 +28,13 @@ const formSchema = z.object({
   parentId: z.string().optional(),
 })
 
-const mockRouter = {
-  push: (path: string) => {
-    console.log(`Đang điều hướng (mock) đến: ${path}`)
-  },
-  back: () => {
-    console.log("Quay lại (mock)")
-  },
-}
-
 interface UpdateCategoryFormProps {
   categoryId: number
   initialData: {
     name: string
     description: string
     slug: string
-    imageId?: number
+    image?: Media
     active: boolean
     parentId?: string
   }
@@ -60,7 +43,7 @@ interface UpdateCategoryFormProps {
 }
 
 function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdateCategory }: UpdateCategoryFormProps) {
-  const router = mockRouter
+  const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null)
   const [apiSuccess, setApiSuccess] = useState<string | null>(null)
 
@@ -70,7 +53,7 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
       name: initialData.name,
       description: initialData.description,
       slug: initialData.slug,
-      imageId: initialData.imageId,
+      imageId: initialData.image?.id,
       active: initialData.active,
       parentId: initialData.parentId,
     },
@@ -150,6 +133,7 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
             onChange={(value) => setValue("parentId", value)}
             error={errors.parentId?.message}
             categories={categories}
+            categoryIdToDisable={categoryId}
           />
 
           <div className="space-y-2">
@@ -169,6 +153,7 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
       <ImageUpload
         value={imageIdValue}
         onChange={(value) => setValue("imageId", value)}
+        initialMedia={initialData.image}
         error={errors.imageId?.message}
       />
 

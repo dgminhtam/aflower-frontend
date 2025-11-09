@@ -50,10 +50,10 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
           ) : (
             <div className="w-[18px]" />
           )}
-          {category.media ? (
+          {category.image ? (
             <img
-              src={category.media.urlThumbnail || "/placeholder.svg"}
-              alt={category.media.altText || category.name}
+              src={category.image.urlThumbnail || "/placeholder.svg"}
+              alt={category.image.altText || category.name}
               className="w-10 h-10 rounded-md object-cover flex-shrink-0"
             />
           ) : (

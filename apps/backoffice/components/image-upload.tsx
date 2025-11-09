@@ -1,25 +1,61 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Upload, X, Loader2 } from "lucide-react"
 import { Label } from "@workspace/ui/components/label"
-import type { Media } from "@/app/lib/admin/categories/definitions"
-import { uploadMedia } from "@/app/lib/admin/categories/data"
+import { Button } from "@workspace/ui/components/button"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
+import { Input } from "@workspace/ui/components/input"
+
+interface Media {
+  id: number
+  urlMedium: string
+  urlOriginal: string
+  altText: string
+}
 
 interface ImageUploadProps {
-  value?: string | number | null
-  onChange?: (media: Media) => void
+  value?: number | null
+  initialMedia?: Media | null
+  onChange?: (mediaId: number | undefined) => void
   onUploadSuccess?: (media: Media) => void
   error?: string
 }
 
-export function ImageUpload({ value, onChange, onUploadSuccess, error }: ImageUploadProps) {
+async function uploadMedia(formData: FormData): Promise<Media> {
+  // Simulate API call - replace with your actual backend call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: Math.random(),
+        urlMedium: URL.createObjectURL(formData.get("file") as File),
+        urlOriginal: URL.createObjectURL(formData.get("file") as File),
+        altText: "Uploaded image",
+      })
+    }, 1000)
+  })
+}
+
+export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, error }: ImageUploadProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadedMedia, setUploadedMedia] = useState<Media | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [uploadError, setUploadError] = useState<string>("")
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [hasUploadedInternally, setHasUploadedInternally] = useState(false)
+
+  useEffect(() => {
+    if (initialMedia && !hasUploadedInternally) {
+      setImagePreview(initialMedia.urlMedium)
+      setUploadedMedia(initialMedia)
+    } else if (!initialMedia && !hasUploadedInternally) {
+      setImagePreview(null)
+      setUploadedMedia(null)
+      setUploadError("")
+    }
+  }, [initialMedia, hasUploadedInternally])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -40,15 +76,50 @@ export function ImageUpload({ value, onChange, onUploadSuccess, error }: ImageUp
       formData.append("file", file)
 
       const media: Media = await uploadMedia(formData)
+      setImagePreview(media.urlMedium)
       setUploadedMedia(media)
-      onChange?.(media)
+      onChange?.(media.id)
       onUploadSuccess?.(media)
+      setHasUploadedInternally(true)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Upload failed"
       setUploadError(errorMessage)
-      setImagePreview(null)
+      setImagePreview(initialMedia?.urlMedium || null)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      if (file != undefined && file.type.startsWith("image/")) {
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(file)
+        fileInputRef.current!.files = dataTransfer.files
+        handleImageChange({
+          target: { files: dataTransfer.files },
+        } as React.ChangeEvent<HTMLInputElement>)
+      } else {
+        setUploadError("Please drop an image file")
+      }
     }
   }
 
@@ -56,6 +127,8 @@ export function ImageUpload({ value, onChange, onUploadSuccess, error }: ImageUp
     setImagePreview(null)
     setUploadedMedia(null)
     setUploadError("")
+    onChange?.(undefined)
+    setHasUploadedInternally(false)
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -78,45 +151,55 @@ export function ImageUpload({ value, onChange, onUploadSuccess, error }: ImageUp
               </div>
             )}
             {!isLoading && (
-              <button
-                type="button"
+              <Button
                 onClick={handleClearImage}
-                className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition"
+                variant={"outline"}
+                size="icon"
+                className="absolute top-2 right-2 cursor-pointer rounded-full"
               >
-                <X className="w-4 h-4" />
-              </button>
+                <X />
+              </Button>
             )}
           </div>
         ) : (
-          <div
+          <Empty
             onClick={() => !isLoading && fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center w-full px-6 py-10 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-56 ${
+              isDragging ? "bg-muted border-primary border-2" : ""
+            }`}
           >
             {isLoading ? (
-              <>
-                <Loader2 className="w-10 h-10 text-muted-foreground mb-3 animate-spin" />
-                <p className="text-sm font-medium text-foreground">Đang tải lên...</p>
-              </>
+              <EmptyContent>
+                <EmptyMedia>
+                  <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
+                </EmptyMedia>
+                <EmptyTitle>Đang tải lên...</EmptyTitle>
+              </EmptyContent>
             ) : (
-              <>
-                <Upload className="w-10 h-10 text-muted-foreground mb-3" />
-                <p className="text-sm font-medium text-foreground">Nhấp để tải lên hoặc kéo thả</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, GIF (tối đa 5MB)</p>
-              </>
+              <EmptyContent>
+                <EmptyMedia variant="icon">
+                  <Upload />
+                </EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>{isDragging ? "Thả để tải lên" : "Nhấp để tải lên hoặc kéo thả"}</EmptyTitle>
+                  <EmptyDescription>PNG, JPG, WEBP (tối đa 5MB)</EmptyDescription>
+                </EmptyHeader>
+              </EmptyContent>
             )}
-          </div>
+          </Empty>
         )}
-        <input
-          ref={fileInputRef}
+        <Input ref={fileInputRef}
           type="file"
           accept="image/*"
           onChange={handleImageChange}
           disabled={isLoading}
-          className="hidden"
-        />
+          className="hidden" />
       </div>
 
-      {uploadedMedia && (
+      {uploadedMedia && hasUploadedInternally && (
         <div className="mt-4 p-4 bg-muted rounded-lg space-y-2 text-sm">
           <p className="font-medium text-foreground">Upload thành công!</p>
           <div className="space-y-1 text-muted-foreground">

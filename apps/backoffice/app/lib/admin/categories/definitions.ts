@@ -6,7 +6,7 @@ export interface Category {
   slug: string;
   description: string;
   active: boolean;
-  media: Media;
+  image: Media;
   createdDate: string;
   lastModifiedDate: string;
   parentId?: number;
@@ -15,10 +15,13 @@ export interface Category {
 
 export type CategoryResponse = Root<Category>;
 
-
-export interface UpdateCategoryRequest {
-  name: string;
-  description: string;
+export type UpdateCategoryRequest = {
+  name: string
+  slug: string
+  description: string
+  parentId?: string
+  active: boolean
+  imageId?: number
 }
 
 export interface Media {

@@ -1,4 +1,5 @@
 import { getCategoryById, getCategoryTree, updateCategory } from "@/app/lib/admin/categories/data"
+import { UpdateCategoryRequest } from "@/app/lib/admin/categories/definitions"
 import UpdateCategoryForm from "@/components/update-category-form"
 import { Separator } from "@radix-ui/react-separator"
 import { Button } from "@workspace/ui/components/button"
@@ -11,7 +12,7 @@ interface UpdateCategoryPageProps {
   }>
 }
 
-async function handleUpdateCategory(id: number, data: any) {
+async function handleUpdateCategory(id: number, data: UpdateCategoryRequest) {
   "use server"
   try {
     await updateCategory(id, data)
@@ -36,13 +37,13 @@ export default async function UpdateCategoryPage({ params }: UpdateCategoryPageP
         </CardHeader>
         <Separator />
         <CardContent className="pt-5">
-                    <UpdateCategoryForm
+          <UpdateCategoryForm
             categoryId={categoryId}
             initialData={{
               name: category.name,
               description: category.description || "",
               slug: category.slug || "",
-              imageId: category.media?.id,
+              image: category.image,
               active: category.active !== false,
               parentId: category.parentId ? String(category.parentId) : undefined,
             }}

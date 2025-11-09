@@ -3,7 +3,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { URLSearchParams } from 'url';
 // Giả định các định nghĩa này tồn tại
-import { CategoryResponse, Category, Media, CreateCategoryRequest } from '@/app/lib/admin/categories/definitions';
+import { CategoryResponse, Category, Media, CreateCategoryRequest, UpdateCategoryRequest } from '@/app/lib/admin/categories/definitions';
 import { buildFilterQuery, buildSortQuery } from '@/app/lib/admin/utils';
 
 const API_TIMEOUT_MS = 10000;
@@ -221,7 +221,7 @@ export async function createCategory(request: CreateCategoryRequest): Promise<Ca
   }
 }
 
-export async function updateCategory(id: number, request: CreateCategoryRequest): Promise<Category> {
+export async function updateCategory(id: number, request: UpdateCategoryRequest): Promise<Category> {
   const token = await getToken()
   const baseUrl = process.env.API_BASE_URL
   if (!baseUrl) {

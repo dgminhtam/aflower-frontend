@@ -14,6 +14,7 @@ import { CategorySelect } from "./category-select"
 import type { Category, CreateCategoryRequest, Media } from "@/app/lib/admin/categories/definitions"
 import { ImageUpload } from "./image-upload"
 import { createCategory } from "@/app/lib/admin/categories/data"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
@@ -28,17 +29,8 @@ const formSchema = z.object({
   parentId: z.string().optional(),
 })
 
-const mockRouter = {
-  push: (path: string) => {
-    console.log(`Đang điều hướng (mock) đến: ${path}`)
-  },
-  back: () => {
-    console.log("Quay lại (mock)")
-  },
-}
-
 function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
-  const router = mockRouter
+  const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null)
   const [apiSuccess, setApiSuccess] = useState<string | null>(null)
 
@@ -76,11 +68,7 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
       setValue("slug", generatedSlug)
     }
   }, [nameValue, setValue])
-
-  const handleImageUpload = (media: Media) => {
-    setValue("imageId", media.id)
-  }
-
+  
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setApiError(null)
     setApiSuccess(null)
@@ -159,7 +147,10 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
         </div>
       </div>
 
-      <ImageUpload value={imageIdValue} onChange={handleImageUpload} error={errors.imageId?.message} />
+      <ImageUpload 
+        value={imageIdValue} 
+        onChange={(value) => setValue("imageId", value)}
+        error={errors.imageId?.message} />
 
       {apiSuccess && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
