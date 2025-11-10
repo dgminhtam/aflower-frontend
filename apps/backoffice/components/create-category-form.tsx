@@ -1,38 +1,62 @@
 "use client"
 
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import * as z from "zod"
+import { Controller, useForm } from "react-hook-form"
+import type { Category, CreateCategoryRequest } from "@/app/lib/categories/definitions"
+import { createCategory } from "@/app/lib/categories/action"
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Button } from "@workspace/ui/components/button"
 import { Switch } from "@workspace/ui/components/switch"
 import { Input } from "@workspace/ui/components/input"
 import { Textarea } from "@workspace/ui/components/textarea"
-import { Label } from "@workspace/ui/components/label"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import React, { useState } from "react"
 import { CategorySelect } from "./category-select"
-import type { Category, CreateCategoryRequest } from "@/app/lib/categories/definitions"
 import { ImageUpload } from "./image-upload"
-import { useRouter } from "next/navigation"
-import { createCategory } from "@/app/lib/categories/action"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import { AlertCircleIcon } from "lucide-react"
 
 const formSchema = z.object({
-  name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
-  description: z.string().min(1, "Mô tả không được để trống").max(200, "Mô tả quá dài"),
+  name: z
+    .string()
+    .min(1, "Tên không được để trống")
+    .max(50, "Tên quá dài"),
+  description: z
+    .string()
+    .min(1, "Mô tả không được để trống")
+    .max(255, "Mô tả quá dài"),
   slug: z
     .string()
     .min(1, "Slug không được để trống")
     .max(50, "Slug quá dài")
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chỉ được chứa chữ thường, số và dấu gạch ngang"),
-  imageId: z.number().optional(),
-  active: z.boolean().default(true),
-  parentId: z.string().optional(),
+  imageId: z
+    .number()
+    .optional(),
+  active: z
+    .boolean(),
+  parentId: z
+    .string()
+    .min(1)
+    .optional(),
 })
 
 function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
   const router = useRouter();
-  const [apiError, setApiError] = useState<string | null>(null)
-  const [apiSuccess, setApiSuccess] = useState<string | null>(null)
+  const [apiError, setApiError] = React.useState<string | null>(null)
+  const [apiSuccess, setApiSuccess] = React.useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,33 +66,21 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
       slug: "",
       imageId: undefined,
       active: true,
-      parentId: "",
+      parentId: undefined,
     },
   })
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue,
-  } = form
-
-  const nameValue = watch("name")
-  const activeValue = watch("active")
-  const parentIdValue = watch("parentId")
-  const imageIdValue = watch("imageId")
-
+  const nameValue = form.watch("name")
   React.useEffect(() => {
     if (nameValue) {
       const generatedSlug = nameValue
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "")
-      setValue("slug", generatedSlug)
+      form.setValue("slug", generatedSlug)
     }
-  }, [nameValue, setValue])
-  
+  }, [nameValue, form.setValue])
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setApiError(null)
     setApiSuccess(null)
@@ -95,90 +107,181 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* Basic Information Section */}
-      <div className="space-y-4">
-        {/* Name and Slug Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              Tên danh mục <span className="text-destructive">*</span>
-            </Label>
-            <Input id="name" type="text" placeholder="Nhập tên danh mục" {...register("name")} />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="slug">
-              Slug <span className="text-destructive">*</span>
-            </Label>
-            <Input id="slug" type="text" placeholder="auto-generated" {...register("slug")} />
-            {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">
-            Mô tả <span className="text-destructive">*</span>
-          </Label>
-          <Textarea id="description" placeholder="Mô tả chi tiết về danh mục" {...register("description")} rows={4} />
-          {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CategorySelect
-            value={parentIdValue}
-            onChange={(value) => setValue("parentId", value)}
-            error={errors.parentId?.message}
-            categories={categories}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FieldGroup className="grid grid-cols-2 gap-6">
+          <Controller
+            name="name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="form-rhf-name">
+                  Tên danh mục
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="form-rhf-name"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Nhập tên danh mục"
+                  autoComplete="off"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
           />
+          <Controller
+            name="slug"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="form-rhf-slug">
+                  Slug <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="form-rhf-slug"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Nhập slug danh mục"
+                  autoComplete="off"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </FieldGroup>
 
-          <div className="space-y-2">
-            <Label htmlFor="active">Trạng thái</Label>
-            <div className="flex items-center justify-between px-4 bg-muted rounded-lg border border-border h-full">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium text-foreground">
-                  {activeValue ? "Đang hoạt động" : "Bị vô hiệu hóa"}
-                </p>
-              </div>
-              <Switch id="active" checked={activeValue} onCheckedChange={(checked) => setValue("active", checked)} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ImageUpload 
-        value={imageIdValue} 
-        onChange={(value) => setValue("imageId", value)}
-        error={errors.imageId?.message} />
-
-      {apiSuccess && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm font-medium text-green-800">{apiSuccess}</p>
-        </div>
-      )}
-      {apiError && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm font-medium text-red-800">{apiError}</p>
-        </div>
-      )}
-
-      <div className="flex gap-3 pt-4 border-t border-border">
-        <Button disabled={isSubmitting} type="submit">
-          {isSubmitting ? (
-            <>
-              <Spinner className="size-4 mr-2" />
-              Đang lưu...
-            </>
-          ) : (
-            "Tạo"
+        <Controller
+          name="description"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="form-rhf-description">
+                Mô tả danh mục
+              </FieldLabel>
+              <InputGroup>
+                <InputGroupTextarea
+                  {...field}
+                  id="form-rhf-description"
+                  placeholder="Nhập mô tả danh mục"
+                  rows={6}
+                  className="min-h-24 resize-none"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="block-end">
+                  <InputGroupText className="tabular-nums">
+                    {field.value.length}/255 kí tự
+                  </InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
+            </Field>
           )}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Hủy
-        </Button>
-      </div>
-    </form>
+        />
+        <Controller
+          name="parentId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="parent-category">
+                Danh mục cha
+              </FieldLabel>
+              <CategorySelect
+                categories={categories}
+                error={form.formState.errors.parentId?.message}
+                onChange={field.onChange}
+                value={field.value}
+              />
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
+        />
+        <Controller
+          name="active"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field
+              orientation="horizontal"
+              data-invalid={fieldState.invalid}
+              className="grid grid-cols-1"
+            >
+              <FieldContent>
+                <FieldLabel htmlFor="form-rhf-active">
+                  Kích hoạt
+                </FieldLabel>
+              </FieldContent>
+              <Switch
+                id="form-rhf-active"
+                name={field.name}
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                aria-invalid={fieldState.invalid}
+              />
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
+        />
+        {/* === UPLOAD ẢNH (Custom Component) === */}
+        <Controller
+          name="imageId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="image">
+                Hình ảnh
+              </FieldLabel>
+              <ImageUpload
+                onChange={field.onChange}
+                value={field.value}
+                error={form.formState.errors.imageId?.message}
+              />
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
+        />
+        {/* === HIỂN THỊ LỖI API === */}
+        {apiSuccess && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm font-medium text-green-800">{apiSuccess}</p>
+          </div>
+        )}
+        {apiError && (
+          <Alert variant="destructive">
+            <AlertCircleIcon />
+            <AlertTitle>Xảy ra lỗi.</AlertTitle>
+            <AlertDescription>{apiError}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* === NÚT SUBMIT === */}
+        <div className="flex gap-3 pt-4 border-t border-border">
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
+              <>
+                <Spinner className="size-4 mr-2" />
+                Đang lưu...
+              </>
+            ) : (
+              "Tạo"
+            )}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            Hủy
+          </Button>
+        </div>
+      </form>
+    </Form>
   )
 }
 

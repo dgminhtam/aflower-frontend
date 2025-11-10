@@ -13,6 +13,7 @@ import {
 import type { Category } from "@/app/lib/categories/definitions"
 import { PlusSquare } from "lucide-react"
 import Image from "next/image"
+import { Badge } from "@workspace/ui/components/badge"
 
 interface CategoryNodeProps {
   category: Category
@@ -31,10 +32,6 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
 
   const handleDelete = () => {
     console.log("Delete category:", category.id, category.name)
-  }
-
-  const handleToggleStatus = () => {
-    console.log("Toggle active status for:", category.id, category.name)
   }
 
   return (
@@ -72,28 +69,25 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
             </Link>
             <p className="text-xs text-muted-foreground">{category.slug}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-right">
             {category.active ? (
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex-shrink-0">Active</span>
+              <Badge className="bg-green-600">Hoạt động</Badge>
             ) : (
-              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full flex-shrink-0">Inactive</span>
+              <Badge variant="destructive">Không hoạt động</Badge>
             )}
           </div>
         </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="hover:bg-muted rounded-md transition-colors flex-shrink-0">
-              <MoreVertical size={18} className="text-muted-foreground" />
-            </button>
+            <Button variant={"ghost"} size="icon">
+              <MoreVertical />
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleToggleStatus}>
-              {category.active ? "Deactivate" : "Activate"}
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleEdit}>Sửa</DropdownMenuItem>
             <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-              Delete
+              Xóa
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

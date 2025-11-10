@@ -2,13 +2,14 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Upload, X, Loader2 } from "lucide-react"
-import { Label } from "@workspace/ui/components/label"
+import { Upload, X, Loader2, CheckCircle2Icon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
 import { uploadMedia } from "@/app/lib/media/action"
 import { Media } from "@/app/lib/categories/definitions"
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import Image from "next/image"
 
 interface ImageUploadProps {
   value?: number | null
@@ -117,14 +118,15 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
 
   return (
     <div className="space-y-2">
-      <Label>Hình ảnh</Label>
       <div className="space-y-3">
         {imagePreview ? (
           <div className="relative w-full max-w-xs">
-            <img
+            <Image
               src={imagePreview || "/placeholder.svg"}
               alt="Preview"
-              className="w-full h-48 object-cover rounded-lg border border-input shadow-sm"
+              className="w-full object-cover rounded-lg border border-input"
+              width={300}
+              height={300}
             />
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
@@ -148,9 +150,8 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-56 ${
-              isDragging ? "bg-muted border-primary border-2" : ""
-            }`}
+            className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-56 ${isDragging ? "bg-muted border-primary border-2" : ""
+              }`}
           >
             {isLoading ? (
               <EmptyContent>
@@ -181,14 +182,13 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
       </div>
 
       {uploadedMedia && hasUploadedInternally && (
-        <div className="mt-4 p-4 bg-muted rounded-lg space-y-2 text-sm">
-          <p className="font-medium text-foreground">Upload thành công!</p>
-          <div className="space-y-1 text-muted-foreground">
-            <p>ID: {uploadedMedia.id}</p>
-            <p>Alt Text: {uploadedMedia.altText}</p>
-            <p className="break-all">URL: {uploadedMedia.urlOriginal}</p>
-          </div>
-        </div>
+        <Alert>
+          <CheckCircle2Icon />
+          <AlertTitle>Upload thành công!</AlertTitle>
+          <AlertDescription>
+            URL: {uploadedMedia.urlOriginal}
+          </AlertDescription>
+        </Alert>
       )}
 
       {(error || uploadError) && <p className="text-sm text-destructive">{error || uploadError}</p>}

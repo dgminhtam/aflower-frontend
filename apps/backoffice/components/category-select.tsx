@@ -118,8 +118,6 @@ export function CategorySelect({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="parent-category">Danh mục cha</Label>
-      {/* 💡 6. Sử dụng giá trị nội bộ và hàm xử lý mới */}
       <Select value={internalValue} onValueChange={handleValueChange}>
         <SelectTrigger id="parent-category" className="w-full">
           <SelectValue placeholder="Chọn danh mục cha (tùy chọn)" />
