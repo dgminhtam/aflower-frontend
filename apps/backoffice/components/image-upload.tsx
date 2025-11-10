@@ -7,6 +7,7 @@ import { Label } from "@workspace/ui/components/label"
 import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
+import { uploadMedia } from "@/app/lib/media/action"
 
 interface Media {
   id: number
@@ -21,20 +22,6 @@ interface ImageUploadProps {
   onChange?: (mediaId: number | undefined) => void
   onUploadSuccess?: (media: Media) => void
   error?: string
-}
-
-async function uploadMedia(formData: FormData): Promise<Media> {
-  // Simulate API call - replace with your actual backend call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: Math.random(),
-        urlMedium: URL.createObjectURL(formData.get("file") as File),
-        urlOriginal: URL.createObjectURL(formData.get("file") as File),
-        altText: "Uploaded image",
-      })
-    }, 1000)
-  })
 }
 
 export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, error }: ImageUploadProps) {

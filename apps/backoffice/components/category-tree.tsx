@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
-import type { Category } from "@/app/lib/admin/categories/definitions"
+import type { Category } from "@/app/lib/categories/definitions"
 import { PlusSquare } from "lucide-react"
 
 interface CategoryNodeProps {

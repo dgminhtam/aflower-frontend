@@ -1,5 +1,5 @@
-import { getCategoryById, getCategoryTree, updateCategory } from "@/app/lib/admin/categories/data"
-import { UpdateCategoryRequest } from "@/app/lib/admin/categories/definitions"
+import { getCategoryById, getCategoryTree, updateCategory } from "@/app/lib/categories/action"
+import { UpdateCategoryRequest } from "@/app/lib/categories/definitions"
 import UpdateCategoryForm from "@/components/update-category-form"
 import { Separator } from "@radix-ui/react-separator"
 import { Button } from "@workspace/ui/components/button"

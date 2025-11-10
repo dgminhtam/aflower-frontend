@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
 import { CategorySelect } from "./category-select"
-import type { Category, Media, UpdateCategoryRequest } from "@/app/lib/admin/categories/definitions"
+import type { Category, Media, UpdateCategoryRequest } from "@/app/lib/categories/definitions"
 import { ImageUpload } from "./image-upload"
 import { useRouter } from "next/navigation"
 
@@ -149,7 +149,7 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
           </div>
         </div>
       </div>
-
+      {imageIdValue}
       <ImageUpload
         value={imageIdValue}
         onChange={(value) => setValue("imageId", value)}

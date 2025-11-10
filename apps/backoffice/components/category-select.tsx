@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
-import type { Category } from "@/app/lib/admin/categories/definitions"
+import type { Category } from "@/app/lib/categories/definitions"
 import { useMemo } from "react" // 💡 1. Import useMemo
 
 interface CategorySelectProps {

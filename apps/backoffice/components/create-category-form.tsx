@@ -11,9 +11,9 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import React, { useState } from "react"
 import { CategorySelect } from "./category-select"
-import type { Category, CreateCategoryRequest, Media } from "@/app/lib/admin/categories/definitions"
+import type { Category, CreateCategoryRequest, Media } from "@/app/lib/categories/definitions"
 import { ImageUpload } from "./image-upload"
-import { createCategory } from "@/app/lib/admin/categories/data"
+import { createCategory } from "@/app/lib/categories/data"
 import { useRouter } from "next/navigation"
 
 const formSchema = z.object({

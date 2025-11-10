@@ -1,6 +1,6 @@
 "use client";
 
-import { Category } from "@/app/lib/admin/categories/definitions";
+import { Category } from "@/app/lib/categories/definitions";
 import { Button } from "@workspace/ui/components/button";
 import {
   Form,

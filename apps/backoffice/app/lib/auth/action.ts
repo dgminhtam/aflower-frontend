@@ -1,0 +1,105 @@
+"use server"
+
+import { auth } from '@clerk/nextjs/server';
+
+const API_TIMEOUT_MS = 10000;
+
+async function apiFetch<T>(
+  urlPath: string,
+  options: RequestInit = {},
+  timeoutMs = API_TIMEOUT_MS
+): Promise<T> {
+  
+  const BASE_URL = process.env.API_BASE_URL; 
+  
+  if (!BASE_URL) {
+    throw new Error("Thiếu biến môi trường API_BASE_URL");
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  const defaultOptions: RequestInit = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store', 
+    signal: controller.signal,
+  };
+
+  const finalOptions: RequestInit = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...(defaultOptions.headers as Record<string, string>),
+      ...((options.headers || {}) as Record<string, string>),
+    },
+  };
+  
+  const fullUrl = `${BASE_URL}${urlPath}`;
+
+  try {
+    const response = await fetch(fullUrl, finalOptions);
+
+    clearTimeout(timeout); 
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API rejected request: ${response.status} ${response.statusText} (URL: ${fullUrl}) - ${errorText}`);
+    }
+
+    if (response.status === 204) {
+      return null as T;
+    }
+
+    const data: T = await response.json();
+    return data;
+    
+  } catch (error) {
+    clearTimeout(timeout); 
+    console.error("Lỗi apiFetch:", error);
+    throw error;
+  }
+}
+
+async function getClerkToken(): Promise<string> {
+  const { getToken, userId } = await auth(); 
+  if (!userId) {
+    throw new Error('Chưa xác thực (User ID not found)');
+  }
+  const token = await getToken({ template: 'aflower' });
+  if (!token) {
+    throw new Error('Không lấy được token (getToken failed)');
+  }
+  return token;
+}
+
+export async function fetchAuthenticated<T>(
+  urlPath: string,
+  options: RequestInit = {}
+): Promise<T> {
+  
+  const token = await getClerkToken();
+
+  const authHeaders: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const finalOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...authHeaders,
+      ...((options.headers || {}) as Record<string, string>),
+    },
+  };
+
+  return apiFetch<T>(urlPath, finalOptions);
+}
+
+export async function fetchPublic<T>(
+  urlPath: string,
+  options: RequestInit = {}
+): Promise<T> {
+  return apiFetch<T>(urlPath, options);
+}

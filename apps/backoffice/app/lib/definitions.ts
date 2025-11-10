@@ -31,13 +31,6 @@ export interface Pageable {
   unpaged: boolean
 }
 
-export interface UserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  picture: string;
-}
-
 export interface Option {
   value: string;
   label: string;
@@ -54,10 +47,4 @@ export interface URLSearchParams {
 export interface FieldSearch {
   name:string;
   value: string[] | string;
-}
-
-export interface LoginResponse {
-    accessToken: string;
-    expiresIn: number;
-    tokenType: string;
 }
