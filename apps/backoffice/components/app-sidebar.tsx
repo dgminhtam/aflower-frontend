@@ -58,32 +58,13 @@ const data = {
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
+      title: "Tài liệu",
       url: "#",
       icon: BookOpen,
       items: [
         {
           title: "Media",
-          url: "#",
+          url: "/media",
         }
       ],
     },
@@ -93,21 +74,17 @@ const data = {
       icon: Settings2,
       items: [
         {
-          title: "General",
+          title: "Shipping",
           url: "#",
         },
         {
-          title: "Team",
+          title: "Payment",
           url: "#",
         },
         {
-          title: "Billing",
+          title: "Email",
           url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
+        }
       ],
     },
   ]

@@ -8,13 +8,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
 import { uploadMedia } from "@/app/lib/media/action"
-
-interface Media {
-  id: number
-  urlMedium: string
-  urlOriginal: string
-  altText: string
-}
+import { Media } from "@/app/lib/categories/definitions"
 
 interface ImageUploadProps {
   value?: number | null

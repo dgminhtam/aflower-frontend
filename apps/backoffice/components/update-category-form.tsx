@@ -149,7 +149,6 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
           </div>
         </div>
       </div>
-      {imageIdValue}
       <ImageUpload
         value={imageIdValue}
         onChange={(value) => setValue("imageId", value)}
