@@ -12,6 +12,7 @@ import {
 } from "@workspace/ui/components/dropdown-menu"
 import type { Category } from "@/app/lib/categories/definitions"
 import { PlusSquare } from "lucide-react"
+import Image from "next/image"
 
 interface CategoryNodeProps {
   category: Category
@@ -51,10 +52,12 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
             <div className="w-[18px]" />
           )}
           {category.image ? (
-            <img
+            <Image
               src={category.image.urlThumbnail || "/placeholder.svg"}
               alt={category.image.altText || category.name}
               className="w-10 h-10 rounded-md object-cover flex-shrink-0"
+              width={150}
+              height={150}
             />
           ) : (
             <div className="w-10 h-10 rounded-md bg-muted flex-shrink-0" />
@@ -62,6 +65,7 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
           <div className="flex-1">
             <Link
               href={`/categories/${category.id}`}
+              prefetch={false}
               className="flex-1 font-medium text-foreground hover:text-primary hover:underline transition-colors"
             >
               {category.name}

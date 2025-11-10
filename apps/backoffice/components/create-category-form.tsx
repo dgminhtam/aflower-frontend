@@ -11,10 +11,10 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import React, { useState } from "react"
 import { CategorySelect } from "./category-select"
-import type { Category, CreateCategoryRequest, Media } from "@/app/lib/categories/definitions"
+import type { Category, CreateCategoryRequest } from "@/app/lib/categories/definitions"
 import { ImageUpload } from "./image-upload"
-import { createCategory } from "@/app/lib/categories/data"
 import { useRouter } from "next/navigation"
+import { createCategory } from "@/app/lib/categories/action"
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
