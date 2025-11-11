@@ -40,8 +40,7 @@ const formSchema = z.object({
   active: z
     .boolean(),
   parentId: z
-    .string()
-    .min(1)
+    .number()
     .optional(),
 })
 
@@ -78,7 +77,7 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
       slug: values.slug,
       imageId: values.imageId,
       active: values.active,
-      parentId: values.parentId || undefined,
+      parentId: values.parentId,
     }
 
     try {

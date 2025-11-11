@@ -1,31 +1,38 @@
 "use client"
 
-import { Spinner } from "@workspace/ui/components/spinner"
 import { Button } from "@workspace/ui/components/button"
-import { Switch } from "@workspace/ui/components/switch"
 import { Input } from "@workspace/ui/components/input"
-import { Textarea } from "@workspace/ui/components/textarea"
-import { Label } from "@workspace/ui/components/label"
+import { Spinner } from "@workspace/ui/components/spinner"
+import { Switch } from "@workspace/ui/components/switch"
+// Thêm các import từ file "chuẩn"
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
+import { Form } from "@workspace/ui/components/form"
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
+// ---
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+// Thêm Controller
+import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
-import { useState } from "react"
-import { CategorySelect } from "./category-select"
+// Xóa useState, thêm toast
+import { toast } from "sonner"
+// ---
 import type { Category, Media, UpdateCategoryRequest } from "@/app/lib/categories/definitions"
-import { ImageUpload } from "./image-upload"
 import { useRouter } from "next/navigation"
+import { CategorySelect } from "./category-select"
+import { ImageUpload } from "./image-upload"
 
+// Schema được điều chỉnh để khớp với file 1 (chuẩn)
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
-  description: z.string().min(1, "Mô tả không được để trống").max(200, "Mô tả quá dài"),
+  description: z.string().min(1, "Mô tả không được để trống").max(255, "Mô tả quá dài"), // Đổi thành 255
   slug: z
     .string()
     .min(1, "Slug không được để trống")
     .max(50, "Slug quá dài")
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chỉ được chứa chữ thường, số và dấu gạch ngang"),
   imageId: z.number().optional(),
-  active: z.boolean().default(true),
-  parentId: z.string().optional(),
+  active: z.boolean(), // Bỏ .default(true)
+  parentId: z.number().optional(), // Đổi thành number
 })
 
 interface UpdateCategoryFormProps {
@@ -36,16 +43,14 @@ interface UpdateCategoryFormProps {
     slug: string
     image?: Media
     active: boolean
-    parentId?: string
+    parentId?: number
   }
   categories: Category[]
   onUpdateCategory: (id: number, data: UpdateCategoryRequest) => Promise<void>
 }
 
 function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdateCategory }: UpdateCategoryFormProps) {
-  const router = useRouter();
-  const [apiError, setApiError] = useState<string | null>(null)
-  const [apiSuccess, setApiSuccess] = useState<string | null>(null)
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,134 +60,168 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
       slug: initialData.slug,
       imageId: initialData.image?.id,
       active: initialData.active,
-      parentId: initialData.parentId,
+      parentId: initialData.parentId
     },
   })
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue,
-  } = form
-
-  const statusValue = watch("active")
-  const parentIdValue = watch("parentId")
-  const imageIdValue = watch("imageId")
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setApiError(null)
-    setApiSuccess(null)
     const updateCategoryRequest: UpdateCategoryRequest = {
       name: values.name,
       description: values.description,
       slug: values.slug,
       imageId: values.imageId,
       active: values.active,
-      parentId: values.parentId || undefined,
+      parentId: values.parentId,
     }
 
     try {
       await onUpdateCategory(categoryId, updateCategoryRequest)
-      setApiSuccess("Cập nhật danh mục thành công!")
+      toast.success("Cập nhật danh mục thành công!")
     } catch (error) {
       if (error instanceof Error) {
-        setApiError(error.message)
+        toast.error(error.message)
       } else {
-        setApiError("Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại.")
+        toast.error("Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại.")
       }
-      setApiSuccess(null)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* Basic Information Section */}
-      <div className="space-y-4">
-        {/* Name and Slug Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              Tên danh mục <span className="text-destructive">*</span>
-            </Label>
-            <Input id="name" type="text" placeholder="Nhập tên danh mục" {...register("name")} />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="slug">
-              Slug <span className="text-destructive">*</span>
-            </Label>
-            <Input id="slug" type="text" placeholder="auto-generated" {...register("slug")} />
-            {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">
-            Mô tả <span className="text-destructive">*</span>
-          </Label>
-          <Textarea id="description" placeholder="Mô tả chi tiết về danh mục" {...register("description")} rows={4} />
-          {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CategorySelect
-            value={parentIdValue}
-            onChange={(value) => setValue("parentId", value)}
-            error={errors.parentId?.message}
-            categories={categories}
-            categoryIdToDisable={categoryId}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FieldGroup className="grid grid-cols-2 gap-6">
+          <Controller
+            name="name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="form-rhf-name">Tên danh mục</FieldLabel>
+                <Input
+                  {...field}
+                  id="form-rhf-name"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Nhập tên danh mục"
+                  autoComplete="off"
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
           />
+          <Controller
+            name="slug"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="form-rhf-slug">
+                  Slug <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id="form-rhf-slug"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="Nhập slug danh mục"
+                  autoComplete="off"
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </FieldGroup>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Trạng thái</Label>
-            <div className="flex items-center justify-between px-4 bg-muted rounded-lg border border-border h-full">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium text-foreground">
-                  {statusValue ? "Đang hoạt động" : "Bị vô hiệu hóa"}
-                </p>
-              </div>
-              <Switch id="status" checked={statusValue} onCheckedChange={(checked) => setValue("active", checked)} />
-            </div>
-          </div>
-        </div>
-      </div>
-      <ImageUpload
-        value={imageIdValue}
-        onChange={(value) => setValue("imageId", value)}
-        initialMedia={initialData.image}
-        error={errors.imageId?.message}
-      />
-
-      {apiSuccess && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm font-medium text-green-800">{apiSuccess}</p>
-        </div>
-      )}
-      {apiError && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm font-medium text-red-800">{apiError}</p>
-        </div>
-      )}
-
-      <div className="flex gap-3 pt-4 border-t border-border">
-        <Button disabled={isSubmitting} type="submit">
-          {isSubmitting ? (
-            <>
-              <Spinner className="size-4 mr-2" />
-              Đang lưu...
-            </>
-          ) : (
-            "Cập nhật"
+        <Controller
+          name="description"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="form-rhf-description">Mô tả danh mục</FieldLabel>
+              <InputGroup>
+                <InputGroupTextarea
+                  {...field}
+                  id="form-rhf-description"
+                  placeholder="Nhập mô tả danh mục"
+                  rows={6}
+                  className="min-h-24 resize-none"
+                  aria-invalid={fieldState.invalid}
+                />
+                <InputGroupAddon align="block-end">
+                  <InputGroupText className="tabular-nums">{field.value.length}/255 kí tự</InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
           )}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Hủy
-        </Button>
-      </div>
-    </form>
+        />
+
+        <Controller
+          name="parentId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="parent-category">Danh mục cha</FieldLabel>
+              <CategorySelect
+                categories={categories}
+                error={form.formState.errors.parentId?.message}
+                onChange={field.onChange}
+                value={field.value}
+                categoryIdToDisable={categoryId}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="active"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field orientation="horizontal" data-invalid={fieldState.invalid} className="grid grid-cols-1">
+              <FieldContent>
+                <FieldLabel htmlFor="form-rhf-active">Kích hoạt</FieldLabel>
+              </FieldContent>
+              <Switch
+                id="form-rhf-active"
+                name={field.name}
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                aria-invalid={fieldState.invalid}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+        <Controller
+          name="imageId"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="image">Hình ảnh</FieldLabel>
+              <ImageUpload
+                onChange={field.onChange}
+                value={field.value}
+                error={form.formState.errors.imageId?.message}
+                initialMedia={initialData.image}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <div className="flex gap-4 pt-2 border-t border-border">
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
+              <>
+                <Spinner />
+                Đang lưu...
+              </>
+            ) : (
+              "Cập nhật"
+            )}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            Hủy
+          </Button>
+        </div>
+      </form>
+    </Form>
   )
 }
 

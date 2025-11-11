@@ -19,7 +19,7 @@ export type UpdateCategoryRequest = {
   name: string
   slug: string
   description: string
-  parentId?: string
+  parentId?: number
   active: boolean
   imageId?: number
 }
@@ -39,5 +39,5 @@ export interface CreateCategoryRequest {
   description: string
   imageId?: number
   active: boolean
-  parentId?: string
+  parentId?: number
 }
