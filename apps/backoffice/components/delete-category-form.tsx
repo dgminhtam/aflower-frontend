@@ -1,15 +1,15 @@
 "use client";
 
+import { deleteCategoryById } from "@/app/api/categories/action";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
+import { Spinner } from "@workspace/ui/components/spinner";
 import { Loader2, Trash } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function DeleteCategoryForm({ id }: { id: number }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
+  const [isLoading] = useState(false);
+  deleteCategoryById(id);
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -29,7 +29,7 @@ export function DeleteCategoryForm({ id }: { id: number }) {
           <AlertDialogAction asChild>
             <Button disabled={isLoading}>
               {isLoading ? 
-                (<><Loader2 className="animate-spin" /> Đang xóa</>) : "Xác nhận"}
+                (<><Spinner /> Đang xóa</>) : "Xác nhận"}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>

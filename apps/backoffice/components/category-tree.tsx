@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { ChevronRight, MoreVertical } from "lucide-react"
+import { deleteCategoryById } from "@/app/api/categories/action"
+import type { Category } from "@/app/lib/categories/definitions"
+import { AlertDialog } from "@radix-ui/react-alert-dialog"
+import { AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@workspace/ui/components/alert-dialog"
+import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
   DropdownMenu,
@@ -10,10 +12,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
-import type { Category } from "@/app/lib/categories/definitions"
-import { PlusSquare } from "lucide-react"
+import { Spinner } from "@workspace/ui/components/spinner"
+import { ChevronDown, ChevronRight, MoreVertical, PlusSquare } from "lucide-react"
 import Image from "next/image"
-import { Badge } from "@workspace/ui/components/badge"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import React, { useState } from "react"
+import { toast } from "sonner"
 
 interface CategoryNodeProps {
   category: Category
@@ -25,28 +30,34 @@ interface CategoryNodeProps {
 function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleExpand }: CategoryNodeProps) {
   const isExpanded = expandedIds.has(category.id)
   const hasChildren = category.children && category.children.length > 0
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false)
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const router = useRouter()
 
-  const handleEdit = () => {
-    console.log("Edit category:", category.id, category.name)
-  }
-
-  const handleDelete = () => {
-    console.log("Delete category:", category.id, category.name)
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteCategoryById(category.id)
+      toast.success(`Đã xóa danh mục "${category.name}"!`)
+      setIsDeleting(false)
+      setIsAlertOpen(false)
+      router.refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Đã có lỗi xảy ra khi xóa danh mục.")
+      setIsDeleting(false)
+    }
   }
 
   return (
     <div className="select-none">
-      <div
-        className={`flex items-center gap-2 rounded-lg hover:bg-muted/50 transition-colors bg-background border border-border ${level != 0 ? "ml-3" : ""} my-2 p-1`}
-      >
-        <button
-          onClick={() => onToggleExpand?.(category.id)}
-          className="flex items-center gap-3 flex-1 px-3 py-2 text-left"
-        >
+      <div className={`flex items-center gap-2 rounded-lg hover:bg-muted/50 transition-colors bg-background border border-border ${level != 0 ? "ml-3" : ""} my-2 p-1`}>
+        <div className="flex items-center gap-3 flex-1 px-3 py-2 text-left">
           {hasChildren ? (
-            <ChevronRight size={18} className={`flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            <Button onClick={() => onToggleExpand?.(category.id)} variant="ghost" size="icon">
+              {isExpanded ? <ChevronRight /> : <ChevronDown />}
+            </Button>
           ) : (
-            <div className="w-[18px]" />
+            <Button variant="ghost" size="icon"></Button>
           )}
           {category.image ? (
             <Image
@@ -76,7 +87,7 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
               <Badge variant="destructive">Không hoạt động</Badge>
             )}
           </div>
-        </button>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -85,8 +96,16 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEdit}>Sửa</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+            <DropdownMenuItem asChild>
+              <Link href={`/categories/${category.id}`}>
+                Sửa
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setIsAlertOpen(true)}
+              className="text-destructive"
+              onSelect={(e) => e.preventDefault()}
+            >
               Xóa
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -106,6 +125,33 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
           ))}
         </div>
       )}
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Danh mục "{category.name}" sẽ bị xóa vĩnh viễn.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+            <Button
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" />
+                  Đang xóa...
+                </>
+              ) : (
+                "Xác nhận"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -114,22 +160,22 @@ interface CategoryTreeProps {
   categoryTree: Category[]
 }
 
+const getAllCategoryIds = (categories: Category[]): number[] => {
+  const ids: number[] = []
+  const traverse = (cats: Category[]) => {
+    cats.forEach((cat) => {
+      ids.push(cat.id)
+      if (cat.children && cat.children.length > 0) {
+        traverse(cat.children)
+      }
+    })
+  }
+  traverse(categories)
+  return ids
+}
+
 export function CategoryTree({ categoryTree }: CategoryTreeProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
-
-  const getAllCategoryIds = (categories: Category[]): number[] => {
-    const ids: number[] = []
-    const traverse = (cats: Category[]) => {
-      cats.forEach((cat) => {
-        ids.push(cat.id)
-        if (cat.children && cat.children.length > 0) {
-          traverse(cat.children)
-        }
-      })
-    }
-    traverse(categories)
-    return ids
-  }
 
   const handleExpandAll = () => {
     const allIds = getAllCategoryIds(categoryTree)
