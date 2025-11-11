@@ -1,6 +1,5 @@
 "use client"
 
-import { usePathname } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@workspace/ui/components/breadcrumb"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import React from "react"
 
 function capitalize(s: string) {
@@ -17,23 +17,26 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-function formatSegment(segment: string) {
+function formatSegment(segment: string, index: number, allSegments: string[]) {
   const decodedSegment = decodeURIComponent(segment)
-  
   const friendlyNames: { [key: string]: string } = {
-    "admin": "Quản trị",
-    "categories": "Danh mục",
-    "[id]": "Cập nhật",
-    "create": "Tạo mới"
+    categories: "Danh mục",
+    create: "Tạo mới",
   }
-  
-  return friendlyNames[decodedSegment] || capitalize(decodedSegment)
-}
 
+  if (friendlyNames[decodedSegment]) {
+    return friendlyNames[decodedSegment]
+  }
+
+  if (index > 0) {
+    return "Cập nhật"
+  }
+  return capitalize(decodedSegment)
+}
 
 export function AppBreadcrumb() {
   const pathname = usePathname()
-  const segments = pathname.split('/').filter(Boolean)
+  const segments = pathname.split("/").filter(Boolean)
 
   return (
     <Breadcrumb>
@@ -45,9 +48,11 @@ export function AppBreadcrumb() {
         </BreadcrumbItem>
 
         {segments.map((segment, index) => {
-          const href = `/${segments.slice(0, index + 1).join('/')}`
+          const href = `/${segments.slice(0, index + 1).join("/")}`
           const isLast = index === segments.length - 1
-          const title = formatSegment(segment)
+
+          // ✨ THAY ĐỔI Ở ĐÂY: Truyền thêm index và segments
+          const title = formatSegment(segment, index, segments)
 
           return (
             <React.Fragment key={href}>
