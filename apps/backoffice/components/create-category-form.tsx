@@ -1,32 +1,24 @@
 "use client"
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import * as z from "zod"
-import { Controller, useForm } from "react-hook-form"
-import type { Category, CreateCategoryRequest } from "@/app/lib/categories/definitions"
 import { createCategory } from "@/app/lib/categories/action"
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@workspace/ui/components/form"
-import { Spinner } from "@workspace/ui/components/spinner"
+import type { Category, CreateCategoryRequest } from "@/app/lib/categories/definitions"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@workspace/ui/components/button"
-import { Switch } from "@workspace/ui/components/switch"
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
+import {
+  Form
+} from "@workspace/ui/components/form"
 import { Input } from "@workspace/ui/components/input"
-import { Textarea } from "@workspace/ui/components/textarea"
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
+import { Spinner } from "@workspace/ui/components/spinner"
+import { Switch } from "@workspace/ui/components/switch"
+import { useRouter } from "next/navigation"
+import * as React from "react"
+import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
+import * as z from "zod"
 import { CategorySelect } from "./category-select"
 import { ImageUpload } from "./image-upload"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
-import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
-import { AlertCircleIcon } from "lucide-react"
 
 const formSchema = z.object({
   name: z
@@ -55,8 +47,6 @@ const formSchema = z.object({
 
 function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
   const router = useRouter();
-  const [apiError, setApiError] = React.useState<string | null>(null)
-  const [apiSuccess, setApiSuccess] = React.useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,8 +72,6 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
   }, [nameValue, form.setValue])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setApiError(null)
-    setApiSuccess(null)
     const createCategoryRequest: CreateCategoryRequest = {
       name: values.name,
       description: values.description,
@@ -95,14 +83,14 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
 
     try {
       await createCategory(createCategoryRequest)
-      setApiSuccess("Tạo danh mục thành công!")
+      toast.success("Tạo danh mục thành công")
+      form.reset();
     } catch (error) {
       if (error instanceof Error) {
-        setApiError(error.message)
+        toast.error(error.message)
       } else {
-        setApiError("Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại.")
+        toast.error("Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại.")
       }
-      setApiSuccess(null)
     }
   }
 
@@ -230,7 +218,7 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
             </Field>
           )}
         />
-        {/* === UPLOAD ẢNH (Custom Component) === */}
+
         <Controller
           name="imageId"
           control={form.control}
@@ -250,26 +238,11 @@ function CreateCategoryForm({ categories = [] }: { categories: Category[] }) {
             </Field>
           )}
         />
-        {/* === HIỂN THỊ LỖI API === */}
-        {apiSuccess && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm font-medium text-green-800">{apiSuccess}</p>
-          </div>
-        )}
-        {apiError && (
-          <Alert variant="destructive">
-            <AlertCircleIcon />
-            <AlertTitle>Xảy ra lỗi.</AlertTitle>
-            <AlertDescription>{apiError}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* === NÚT SUBMIT === */}
-        <div className="flex gap-3 pt-4 border-t border-border">
+        <div className="flex gap-4 pt-2 border-t border-border">
           <Button disabled={form.formState.isSubmitting} type="submit">
             {form.formState.isSubmitting ? (
               <>
-                <Spinner className="size-4 mr-2" />
+                <Spinner />
                 Đang lưu...
               </>
             ) : (

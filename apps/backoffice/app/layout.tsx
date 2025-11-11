@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import "@workspace/ui/globals.css";
 import { shadcn } from '@clerk/themes';
 import { viVN } from '@clerk/localizations';
+import { Toaster } from "@workspace/ui/components/sonner"
 
 const fontSans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -34,6 +35,7 @@ export default function RootLayout({
       <html lang="vi" className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
         <body className="font-sans antialiased">
           <Providers>{children}</Providers>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
