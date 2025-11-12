@@ -1,17 +1,16 @@
 "use client"
 
+import { ProductResponse } from "@/app/lib/products/definitions"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { ButtonGroup } from "@workspace/ui/components/button-group"
 import { Card } from "@workspace/ui/components/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
 import { Input } from "@workspace/ui/components/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
+import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group"
 import {
   ArrowUpDown,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Edit2,
   Eye,
@@ -22,138 +21,34 @@ import {
   Search,
   Trash2,
   Upload,
-  X,
+  X
 } from "lucide-react"
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useState } from "react"
+import { AppPagination } from "./app-pagination"
 
-interface Product {
-  id: string
-  name: string
-  category: string
-  price: number
-  stock: number
-  status: "active" | "inactive" | "draft"
-  revenue: number
-  image: string
+interface ProductListProps {
+  productPage: ProductResponse
 }
 
-const SAMPLE_PRODUCTS: Product[] = [
-  {
-    id: "1",
-    name: "Wireless Headphones Pro",
-    category: "Electronics",
-    price: 299.99,
-    stock: 45,
-    status: "active",
-    revenue: 13499.55,
-    image: "/wireless-headphones.png",
-  },
-  {
-    id: "2",
-    name: "Premium Desk Lamp",
-    category: "Furniture",
-    price: 89.99,
-    stock: 120,
-    status: "active",
-    revenue: 10798.8,
-    image: "/modern-desk-lamp.png",
-  },
-  {
-    id: "3",
-    name: "Ergonomic Office Chair",
-    category: "Furniture1",
-    price: 449.99,
-    stock: 28,
-    status: "active",
-    revenue: 12599.72,
-    image: "/ergonomic-office-chair.png",
-  },
-  {
-    id: "4",
-    name: "USB-C Hub 7-in-1",
-    category: "Electronics",
-    price: 49.99,
-    stock: 0,
-    status: "inactive",
-    revenue: 0,
-    image: "/usb-hub.png",
-  },
-  {
-    id: "5",
-    name: "Wireless Mouse",
-    category: "Electronics1",
-    price: 39.99,
-    stock: 156,
-    status: "active",
-    revenue: 6238.44,
-    image: "/wireless-mouse.png",
-  },
-  {
-    id: "6",
-    name: "Mechanical Keyboard RGB",
-    category: "Electronics2",
-    price: 149.99,
-    stock: 67,
-    status: "draft",
-    revenue: 10049.33,
-    image: "/mechanical-keyboard.png",
-  },
-]
-
-export function ProductListPage() {
+export function ProductListPage({ productPage }: ProductListProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [categoryFilter, setCategoryFilter] = useState<string[]>([])
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [sortBy, setSortBy] = useState<"name" | "price" | "revenue">("name")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
-
-  const filteredProducts = useMemo(() => {
-    const filtered = SAMPLE_PRODUCTS.filter((product) => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesStatus = statusFilter.length === 0 || statusFilter.includes(product.status)
-      const matchesCategory = categoryFilter.length === 0 || categoryFilter.includes(product.category)
-
-      return matchesSearch && matchesStatus && matchesCategory
-    })
-
-    filtered.sort((a, b) => {
-      let aValue: any = a[sortBy as keyof Product]
-      let bValue: any = b[sortBy as keyof Product]
-
-      if (typeof aValue === "string") {
-        aValue = aValue.toLowerCase()
-        bValue = (bValue as string).toLowerCase()
-      }
-
-      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
-      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
-      return 0
-    })
-
-    return filtered
-  }, [searchQuery, statusFilter, categoryFilter, sortBy, sortOrder])
-
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize
-    return filteredProducts.slice(startIndex, startIndex + pageSize)
-  }, [filteredProducts, currentPage, pageSize])
-
-  const totalPages = Math.ceil(filteredProducts.length / pageSize)
-
-  const categories = Array.from(new Set(SAMPLE_PRODUCTS.map((p) => p.category)))
-  const statuses = Array.from(new Set(SAMPLE_PRODUCTS.map((p) => p.status)))
+  const products = productPage.content;
+  const categories = Array.from(new Set(products.map((p) => p.category?.name)))
+  const statuses = Array.from(new Set(products.map((p) => p.status)))
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
+      case "PUBLISHED":
         return "bg-green-500/10 text-green-700 dark:text-green-400"
-      case "inactive":
-        return "bg-gray-500/10 text-gray-700 dark:text-gray-400"
-      case "draft":
+      case "DRAFT":
         return "bg-blue-500/10 text-blue-700 dark:text-blue-400"
       default:
         return ""
@@ -195,7 +90,6 @@ export function ProductListPage() {
 
   return (
     <div className="w-full">
-      {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2">
           <Button>
@@ -207,30 +101,18 @@ export function ProductListPage() {
             Import CSV
           </Button>
         </div>
-
-
-        <ButtonGroup>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            onClick={() => setViewMode("list")}
-          >
-            <List />
-            List
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            onClick={() => setViewMode("grid")}
-          >
-            <Grid3x3 />
-            Grid
-          </Button>
-        </ButtonGroup>
+        <ToggleGroup type="single" variant={"outline"}>
+          <ToggleGroupItem value="bold" aria-label="Toggle list" onClick={() => setViewMode("list")}>
+            <List /> List
+          </ToggleGroupItem>
+          <ToggleGroupItem value="italic" aria-label="Toggle grid" onClick={() => setViewMode("grid")}>
+            <Grid3x3 /> Grid
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
-      {/* Search and Filters */}
       <Card className="mb-6 border-border bg-card p-4">
         <div className="flex flex-col gap-4">
-          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -241,7 +123,6 @@ export function ProductListPage() {
             />
           </div>
 
-          {/* Filters */}
           <div className="flex flex-wrap gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -345,12 +226,12 @@ export function ProductListPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedProducts.length > 0 ? (
-                    paginatedProducts.map((product) => (
+                  {products.length > 0 ? (
+                    products.map((product) => (
                       <TableRow key={product.id} className="border-border hover:bg-muted/50 transition-colors">
                         <TableCell>
                           <Image
-                            src={product.image || "/placeholder.svg"}
+                            src={product.image?.urlMedium || "/placeholder.webp"}
                             alt={product.name}
                             width={50}
                             height={50}
@@ -358,9 +239,9 @@ export function ProductListPage() {
                           />
                         </TableCell>
                         <TableCell className="font-medium text-foreground">{product.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{product.category}</TableCell>
+                        <TableCell className="text-muted-foreground">{product.category?.name}</TableCell>
                         <TableCell className="text-right text-foreground font-semibold">
-                          ${product.price.toFixed(2)}
+                          ${product.price?.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="secondary" className={`capitalize ${getStatusColor(product.status)}`}>
@@ -368,7 +249,7 @@ export function ProductListPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right text-foreground font-semibold">
-                          ${product.revenue.toFixed(2)}
+                          ${product.price?.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
@@ -419,11 +300,9 @@ export function ProductListPage() {
               </Table>
             </div>
           </Card>
-
-          {/* Pagination Controls */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Items per page:</span>
+              <span className="text-sm text-muted-foreground">Số lượng trên 1 trang:</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -431,7 +310,7 @@ export function ProductListPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  {[5, 10, 20, 50].map((size) => (
+                  {[8, 12, 40, 80].map((size) => (
                     <DropdownMenuItem key={size} onClick={() => handlePageSizeChange(size)}>
                       {size}
                     </DropdownMenuItem>
@@ -442,47 +321,27 @@ export function ProductListPage() {
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages} ({filteredProducts.length} total)
+                Trang {productPage.number} trên {productPage.totalPages} ({productPage.totalElements} tổng)
               </span>
             </div>
 
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="gap-2"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="gap-2"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <AppPagination totalElements={productPage.totalElements} itemsPerPage={productPage.size} />
             </div>
           </div>
         </div>
       ) : (
-        // Grid View with Pagination
         <div className="space-y-4">
-          {paginatedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedProducts.map((product) => (
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+              {products.map((product) => (
                 <Card
                   key={product.id}
-                  className="border-border bg-card overflow-hidden hover:shadow-lg transition-shadow"
+                  className="border-border bg-card overflow-hidden hover:shadow-lg transition-shadow p-4"
                 >
-                  <div className="relative h-48 w-full overflow-hidden bg-muted">
+                  <div className="relative h-48 w-full overflow-hidden bg-muted rounded-lg">
                     <Image
-                      src={product.image || "/placeholder.svg"}
+                      src={product.image?.urlMedium || "/placeholder.webp"}
                       alt={product.name}
                       fill
                       className="object-cover hover:scale-105 transition-transform"
@@ -490,17 +349,17 @@ export function ProductListPage() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-foreground line-clamp-2">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">{product.category}</p>
+                    <p className="text-sm text-muted-foreground mb-3">{product.category?.name}</p>
 
                     <div className="mb-3 flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">${product.price.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-foreground">${product.price?.toFixed(2)}</span>
                       <Badge variant="secondary" className={`capitalize ${getStatusColor(product.status)}`}>
                         {product.status}
                       </Badge>
                     </div>
 
                     <div className="mb-4 text-sm">
-                      <span className="text-muted-foreground">Revenue: ${product.revenue.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Giá gốc: ${product.originPrice?.toFixed(2)}</span>
                     </div>
 
                     <div className="flex gap-2">
@@ -566,31 +425,11 @@ export function ProductListPage() {
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages} ({filteredProducts.length} total)
+                Trang {productPage.number + 1} trên {productPage.totalPages} ({productPage.totalElements} tổng)
               </span>
             </div>
-
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="gap-2"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="gap-2"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <AppPagination totalElements={productPage.totalElements} itemsPerPage={productPage.size} />
             </div>
           </div>
         </div>
@@ -600,18 +439,18 @@ export function ProductListPage() {
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Total Products</p>
-          <p className="mt-2 text-2xl font-bold text-foreground">{SAMPLE_PRODUCTS.length}</p>
+          <p className="mt-2 text-2xl font-bold text-foreground">{products.length}</p>
         </Card>
         <Card className="border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Active Products</p>
           <p className="mt-2 text-2xl font-bold text-foreground">
-            {SAMPLE_PRODUCTS.filter((p) => p.status === "active").length}
+            {products.filter((p) => p.status === "active").length}
           </p>
         </Card>
         <Card className="border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Total Revenue</p>
           <p className="mt-2 text-2xl font-bold text-foreground">
-            ${SAMPLE_PRODUCTS.reduce((sum, p) => sum + p.revenue, 0).toFixed(2)}
+            ${products.reduce((sum, p) => sum + p.price, 0).toFixed(2)}
           </p>
         </Card>
       </div>

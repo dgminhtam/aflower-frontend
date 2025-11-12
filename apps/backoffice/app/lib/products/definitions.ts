@@ -1,5 +1,5 @@
 import { Category } from "../categories/definitions";
-import { Root } from "../definitions";
+import { Media, Root } from "../definitions";
 
 export interface Product {
   id: number;
@@ -7,27 +7,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  maxOrderQuantity: number;
-  minOrderQuantity: number;
-  category: Category;
-  image: Image
   originPrice: number;
+  category: Category;
+  image: Media;
   status: string;
-  externalId: string;
-}
-
-export interface ProductDetail extends Product {
-  variants: ProductDetail[]
-}
-
-export interface Image {
-  fileName: string;
-  altText: string;
-  description: string;
-  realFileName: string;
-  mimeType: string;
-  fileSizeInByte: number;
-  url: string;
 }
 
 export type ProductResponse = Root<Product>;
@@ -45,7 +28,6 @@ export interface ChangeStatusRequest {
 
 export const productStatuses = [
   { value: 'DRAFT', label: 'Nháp', classStyle: 'bg-yellow-500 hover:bg-yellow-600 text-white' },
-  { value: 'ARCHIVE', label: 'Lưu trữ', classStyle: 'bg-gray-500 hover:bg-gray-600 text-white' },
   { value: 'APPROVED', label: 'Duyệt', classStyle: 'bg-green-500 hover:bg-green-600 text-white' },
 ];
 

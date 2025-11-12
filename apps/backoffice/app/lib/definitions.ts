@@ -48,3 +48,12 @@ export interface FieldSearch {
   name:string;
   value: string[] | string;
 }
+
+export interface Media {
+  id: number;
+  altText: string;
+  urlOriginal: string;
+  urlLarge: string;
+  urlMedium: string;
+  urlThumbnail: string;
+}

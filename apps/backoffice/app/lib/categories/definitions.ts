@@ -1,4 +1,4 @@
-import { Root } from "../definitions";
+import { Media, Root } from "../definitions";
 
 export interface Category {
   id: number;
@@ -22,15 +22,6 @@ export type UpdateCategoryRequest = {
   parentId?: number
   active: boolean
   imageId?: number
-}
-
-export interface Media {
-  id: number;
-  altText: string;
-  urlOriginal: string;
-  urlLarge: string;
-  urlMedium: string;
-  urlThumbnail: string;
 }
 
 export interface CreateCategoryRequest {

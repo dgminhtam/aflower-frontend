@@ -81,7 +81,6 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
             {typeof page === "number" ? (
               <PaginationLink
                 href="#"
-                size="sm"
                 isActive={currentPage === page}
                 onClick={(e) => {
                   e.preventDefault();

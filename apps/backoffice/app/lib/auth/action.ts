@@ -79,6 +79,7 @@ async function getClerkToken(): Promise<string> {
   if (!token) {
     throw new Error('Không lấy được token (getToken failed)');
   }
+  console.log(token)
   return token;
 }
 

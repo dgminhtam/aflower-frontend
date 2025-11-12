@@ -1,7 +1,5 @@
-"use server"
-
 import { URLSearchParams } from 'url';
-import { CategoryResponse, Category, Media, CreateCategoryRequest, UpdateCategoryRequest } from '@/app/lib/categories/definitions';
+import { CategoryResponse, Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/app/lib/categories/definitions';
 import { buildFilterQuery, buildSortQuery } from '../utils';
 import { fetchAuthenticated } from '../auth/action';
 

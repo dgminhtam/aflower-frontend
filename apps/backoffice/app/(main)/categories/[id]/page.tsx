@@ -27,7 +27,7 @@ async function handleUpdateCategory(id: number, data: UpdateCategoryRequest) {
   }
 }
 
-export default async function UpdateCategoryPage({ params }: UpdateCategoryPageProps) {
+export default async function Page({ params }: UpdateCategoryPageProps) {
   const { id } = await params;
   const categoryId = Number(id);
   const [category, categories] = await Promise.all([
