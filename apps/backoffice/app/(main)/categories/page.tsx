@@ -1,7 +1,7 @@
 import { getCategoryTree } from "@/app/lib/categories/action";
 import { CategoryTree } from "@/components/category-tree";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Separator } from "@workspace/ui/components/separator"
+import { Separator } from "@workspace/ui/components/separator";
 
 export default async function Page() {
     const categoryTree = await getCategoryTree();

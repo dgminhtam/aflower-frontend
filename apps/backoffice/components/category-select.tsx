@@ -50,6 +50,7 @@ export function CategorySelect({
   categories,
   categoryIdToDisable,
 }: CategorySelectProps) {
+  
   const flattenedCategories = useMemo(
     () => flattenCategoryTree(categories),
     [categories],

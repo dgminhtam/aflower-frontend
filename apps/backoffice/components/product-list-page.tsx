@@ -2,6 +2,7 @@
 
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { ButtonGroup } from "@workspace/ui/components/button-group"
 import { Card } from "@workspace/ui/components/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
 import { Input } from "@workspace/ui/components/input"
@@ -20,6 +21,7 @@ import {
   Plus,
   Search,
   Trash2,
+  Upload,
   X,
 } from "lucide-react"
 import Image from "next/image"
@@ -188,7 +190,6 @@ export function ProductListPage() {
     if (items.length <= 3) {
       return items.join(", ")
     }
-    // Show 2 items + count of remaining
     return `${items.slice(0, 2).join(", ")} +${items.length - 2}`
   }
 
@@ -196,12 +197,19 @@ export function ProductListPage() {
     <div className="w-full">
       {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto w-full">
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Button>
-
         <div className="flex gap-2">
+          <Button>
+            <Plus />
+            THêm sản phẩm
+          </Button>
+          <Button variant={"outline"}>
+            <Upload />
+            Import CSV
+          </Button>
+        </div>
+
+
+        <ButtonGroup>
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             onClick={() => setViewMode("list")}
@@ -216,7 +224,7 @@ export function ProductListPage() {
             <Grid3x3 />
             Grid
           </Button>
-        </div>
+        </ButtonGroup>
       </div>
 
       {/* Search and Filters */}

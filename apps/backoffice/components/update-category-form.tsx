@@ -4,35 +4,29 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
-// Thêm các import từ file "chuẩn"
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
 import { Form } from "@workspace/ui/components/form"
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
-// ---
 import { zodResolver } from "@hookform/resolvers/zod"
-// Thêm Controller
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
-// Xóa useState, thêm toast
 import { toast } from "sonner"
-// ---
 import type { Category, Media, UpdateCategoryRequest } from "@/app/lib/categories/definitions"
 import { useRouter } from "next/navigation"
 import { CategorySelect } from "./category-select"
 import { ImageUpload } from "./image-upload"
 
-// Schema được điều chỉnh để khớp với file 1 (chuẩn)
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
-  description: z.string().min(1, "Mô tả không được để trống").max(255, "Mô tả quá dài"), // Đổi thành 255
+  description: z.string().min(1, "Mô tả không được để trống").max(255, "Mô tả quá dài"),
   slug: z
     .string()
     .min(1, "Slug không được để trống")
     .max(50, "Slug quá dài")
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug chỉ được chứa chữ thường, số và dấu gạch ngang"),
   imageId: z.number().optional(),
-  active: z.boolean(), // Bỏ .default(true)
-  parentId: z.number().optional(), // Đổi thành number
+  active: z.boolean(),
+  parentId: z.number().optional(),
 })
 
 interface UpdateCategoryFormProps {

@@ -3,7 +3,6 @@ import { ProductListPage } from "@/components/product-list-page";
 import { Separator } from "@radix-ui/react-separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
 
-
 export default function Page() {
     return (
         <Card>
