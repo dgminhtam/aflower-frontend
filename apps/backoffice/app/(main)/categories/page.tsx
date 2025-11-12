@@ -12,7 +12,7 @@ export default async function Page() {
                 <CardDescription>Toàn bộ danh mục</CardDescription>
             </CardHeader>
             <Separator />
-            <CardContent className="pt-5">
+            <CardContent>
                 <CategoryTree categoryTree={categoryTree} />
             </CardContent>
         </Card>

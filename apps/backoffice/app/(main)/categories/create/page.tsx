@@ -12,7 +12,7 @@ export default async function Page() {
         <CardDescription>Thêm một danh mục mới vào hệ thống. Hãy điền đầy đủ thông tin bên dưới.</CardDescription>
       </CardHeader>
       <Separator />
-      <CardContent className="pt-5">
+      <CardContent>
         <CreateCategoryForm categories={categories}/>
       </CardContent>
     </Card>

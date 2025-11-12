@@ -41,7 +41,7 @@ export default async function Page({ params }: UpdateCategoryPageProps) {
         <CardDescription>Chỉnh sửa thông tin</CardDescription>
       </CardHeader>
       <Separator />
-      <CardContent className="pt-5">
+      <CardContent>
         <UpdateCategoryForm
           categoryId={categoryId}
           initialData={{

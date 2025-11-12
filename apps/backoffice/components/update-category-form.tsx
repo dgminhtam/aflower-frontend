@@ -11,10 +11,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { toast } from "sonner"
-import type { Category, Media, UpdateCategoryRequest } from "@/app/lib/categories/definitions"
+import type { Category, UpdateCategoryRequest } from "@/app/lib/categories/definitions"
 import { useRouter } from "next/navigation"
 import { CategorySelect } from "./category-select"
 import { ImageUpload } from "./image-upload"
+import { Media } from "@/app/lib/definitions"
 
 const formSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
@@ -88,7 +89,7 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="form-rhf-name">Tên danh mục</FieldLabel>
+                <FieldLabel htmlFor="form-rhf-name">Tên danh mục <span className="text-destructive">*</span></FieldLabel>
                 <Input
                   {...field}
                   id="form-rhf-name"

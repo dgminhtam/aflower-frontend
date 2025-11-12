@@ -9,6 +9,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 interface AppPaginationProps {
@@ -65,7 +66,7 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
     <Pagination>
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious
+          <PaginationLink
             href="#"
             onClick={(e) => {
               e.preventDefault();
@@ -73,7 +74,9 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
             }}
             className="border"
             aria-disabled={currentPage === 1}
-          />
+          >
+            <ChevronLeft />
+          </PaginationLink>
         </PaginationItem>
 
         {getPageNumbers().map((page, index) => (
@@ -101,7 +104,7 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
         ))}
 
         <PaginationItem>
-          <PaginationNext
+          <PaginationLink
             href="#"
             onClick={(e) => {
               e.preventDefault();
@@ -109,7 +112,9 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
             }}
             className="border"
             aria-disabled={currentPage === totalPages}
-          />
+          >
+            <ChevronRight />
+          </PaginationLink>
         </PaginationItem>
       </PaginationContent>
     </Pagination>

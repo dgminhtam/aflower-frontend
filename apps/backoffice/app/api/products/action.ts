@@ -1,5 +1,5 @@
 import { fetchAuthenticated } from '@/app/lib/auth/action';
-import { ProductResponse } from '@/app/lib/products/definitions';
+import { Product, ProductResponse } from '@/app/lib/products/definitions';
 import { buildFilterQuery, buildSortQuery } from '@/app/lib/utils';
 import { URLSearchParams } from 'url';
 
@@ -57,4 +57,9 @@ export async function getProducts(
       empty: true,
     };
   }
+}
+
+export async function getProductById(id: number): Promise<Product> {
+  const fullUrl = `/products/${id}`;
+  return await fetchAuthenticated<Product>(fullUrl);
 }
