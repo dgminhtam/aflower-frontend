@@ -1,16 +1,74 @@
-'use client';
+"use client";
 
 import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
+  PaginationLink
 } from "@workspace/ui/components/pagination";
+import { useMemo, useTransition } from "react";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
+const DOTS = '...';
+
+const range = (start: number, end: number) => {
+  let length = end - start + 1;
+  return Array.from({ length }, (_, idx) => idx + start);
+};
+
+export const usePagination = ({
+  totalElements,
+  itemsPerPage,
+  siblingCount = 1,
+  currentPage,
+}: {
+  totalElements: number;
+  itemsPerPage: number;
+  siblingCount?: number;
+  currentPage: number;
+}) => {
+  const totalPageCount = Math.ceil(totalElements / itemsPerPage);
+
+  const paginationRange = useMemo(() => {
+    const totalPageNumbers = siblingCount + 5;
+    if (totalPageNumbers >= totalPageCount) {
+      return range(1, totalPageCount);
+    }
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+    const rightSiblingIndex = Math.min(
+      currentPage + siblingCount,
+      totalPageCount
+    );
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPageCount - 2;
+    const firstPageIndex = 1;
+    const lastPageIndex = totalPageCount;
+
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      let leftItemCount = 3 + 2 * siblingCount;
+      let leftRange = range(1, leftItemCount);
+      return [...leftRange, DOTS, totalPageCount];
+    }
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      let rightItemCount = 3 + 2 * siblingCount;
+      let rightRange = range(
+        totalPageCount - rightItemCount + 1,
+        totalPageCount
+      );
+      return [firstPageIndex, DOTS, ...rightRange];
+    }
+    if (shouldShowLeftDots && shouldShowRightDots) {
+      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
+      return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
+    }
+    return [];
+  }, [totalElements, itemsPerPage, siblingCount, currentPage]);
+
+  return paginationRange;
+};
 
 interface AppPaginationProps {
   totalElements: number;
@@ -21,45 +79,35 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  
+  const [isPending, startTransition] = useTransition();
 
   const currentPage = Number(searchParams.get('page')) || 1;
   const totalPages = Math.ceil(totalElements / itemsPerPage);
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      const params = new URLSearchParams(searchParams);
-      params.set('page', page.toString());
+  const paginationRange = usePagination({
+    currentPage,
+    totalElements,
+    itemsPerPage,
+    siblingCount: 1
+  });
+
+  const handlePageChange = (page: number | string) => {
+    if (page === DOTS || page === currentPage || isPending) return;
+    
+    const pageNumber = Number(page);
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+
+    const params = new URLSearchParams(searchParams);
+    params.set('page', page.toString());
+
+    startTransition(() => {
       router.push(`${pathname}?${params.toString()}`);
-    }
-  };
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-
-    // Add previous page if applicable
-    if (currentPage > 1) {
-      if (currentPage > 2) {
-        pages.push('...');
-      }
-      pages.push(currentPage - 1);
-    }
-
-    // Add current page
-    pages.push(currentPage);
-
-    // Add next page if applicable
-    if (currentPage < totalPages) {
-      pages.push(currentPage + 1);
-      if (currentPage < totalPages - 1) {
-        pages.push('...');
-      }
-    }
-
-    return pages;
+    });
   };
 
   if (totalPages <= 1) {
-    return (<></>);
+    return null; 
   }
 
   return (
@@ -67,51 +115,48 @@ export function AppPagination({ totalElements, itemsPerPage }: AppPaginationProp
       <PaginationContent>
         <PaginationItem>
           <PaginationLink
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(currentPage - 1);
-            }}
-            className="border"
-            aria-disabled={currentPage === 1}
+            // Xóa 'href'
+            onClick={() => handlePageChange(currentPage - 1)}
+            aria-disabled={currentPage === 1 || isPending}
+            className={`border cursor-pointer ${
+              currentPage === 1 ? 'pointer-events-none opacity-50' : ''
+            } ${isPending ? 'pointer-events-none opacity-50' : ''}`}
           >
             <ChevronLeft />
           </PaginationLink>
         </PaginationItem>
 
-        {getPageNumbers().map((page, index) => (
+        {/* Render các số trang */}
+        {paginationRange.map((page, index) => (
           <PaginationItem key={`${page}-${index}`}>
-            {typeof page === "number" ? (
+            {page === DOTS ? (
+              <PaginationEllipsis />
+            ) : (
               <PaginationLink
-                href="#"
+                // Xóa 'href'
+                onClick={() => handlePageChange(page)}
                 isActive={currentPage === page}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePageChange(page);
-                }}
-                className={`border ${currentPage === page
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : ''
-                  }`}
+                className={`border cursor-pointer ${currentPage === page
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : ''
+                  } ${isPending ? 'pointer-events-none opacity-50' : ''}`}
                 aria-current={currentPage === page ? "page" : undefined}
               >
                 {page}
               </PaginationLink>
-            ) : (
-              <PaginationEllipsis />
             )}
           </PaginationItem>
         ))}
 
+        {/* Nút Tới Sau (Next) */}
         <PaginationItem>
           <PaginationLink
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(currentPage + 1);
-            }}
-            className="border"
-            aria-disabled={currentPage === totalPages}
+            // Xóa 'href'
+            onClick={() => handlePageChange(currentPage + 1)}
+            aria-disabled={currentPage === totalPages || isPending}
+            className={`border cursor-pointer ${
+              currentPage === totalPages ? 'pointer-events-none opacity-50' : ''
+            } ${isPending ? 'pointer-events-none opacity-50' : ''}`}
           >
             <ChevronRight />
           </PaginationLink>

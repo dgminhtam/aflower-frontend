@@ -1,7 +1,7 @@
 import { URLSearchParams } from 'url';
 import { CategoryResponse, Category, CreateCategoryRequest, UpdateCategoryRequest } from '@/app/lib/categories/definitions';
 import { buildFilterQuery, buildSortQuery } from '../utils';
-import { fetchAuthenticated } from '../auth/action';
+import { fetchAuthenticated } from '../../api/auth/action';
 
 export async function getCategories(
   searchParams: { [key: string]: string | string[] | undefined }

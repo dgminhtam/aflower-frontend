@@ -41,7 +41,7 @@ async function apiFetch<T>(
   };
 
   const fullUrl = `${BASE_URL}${urlPath}`;
-
+  console.log(fullUrl);
   try {
     const response = await fetch(fullUrl, finalOptions);
     clearTimeout(timeout);

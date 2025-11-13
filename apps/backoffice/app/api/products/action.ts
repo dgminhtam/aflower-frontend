@@ -1,4 +1,4 @@
-import { fetchAuthenticated } from '@/app/lib/auth/action';
+import { fetchAuthenticated } from '@/app/api/auth/action';
 import { Product, ProductResponse } from '@/app/lib/products/definitions';
 import { buildFilterQuery, buildSortQuery } from '@/app/lib/utils';
 import { URLSearchParams } from 'url';

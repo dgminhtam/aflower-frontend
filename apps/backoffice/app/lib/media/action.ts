@@ -1,6 +1,6 @@
 "use server"
 
-import { fetchAuthenticated } from '../auth/action';
+import { fetchAuthenticated } from '../../api/auth/action';
 import { Media } from '../definitions';
 
 export async function uploadMedia(fileData: FormData): Promise<Media> {

@@ -1,6 +1,6 @@
 "use server"
 
-import { fetchAuthenticated } from '@/app/lib/auth/action';
+import { fetchAuthenticated } from '@/app/api/auth/action';
 import { Category, CategoryResponse, CreateCategoryRequest, UpdateCategoryRequest } from '@/app/lib/categories/definitions';
 import { buildFilterQuery, buildSortQuery } from '@/app/lib/utils';
 import { URLSearchParams } from 'url';
