@@ -1,6 +1,5 @@
 "use client"
 
-import { createCategory } from "@/app/lib/categories/action"
 import type { Category, CreateCategoryRequest } from "@/app/lib/categories/definitions"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@workspace/ui/components/button"
@@ -19,6 +18,7 @@ import { toast } from "sonner"
 import * as z from "zod"
 import { CategorySelect } from "./category-select"
 import { ImageUpload } from "./image-upload"
+import { createCategory } from "@/app/api/categories/action"
 
 const formSchema = z.object({
   name: z

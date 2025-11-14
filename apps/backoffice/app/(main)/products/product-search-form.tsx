@@ -1,22 +1,18 @@
 "use client";
 
-import { Combobox } from "@/components/combobox";
+import { Category } from "@/app/lib/categories/definitions";
+import { Combobox, ComboboxOption } from "@/components/combobox";
+import { MultiSelectCombobox } from "@/components/multiple-select-combobox";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@workspace/ui/components/dropdown-menu";
 import { Input } from "@workspace/ui/components/input";
 import { Spinner } from "@workspace/ui/components/spinner";
-import { Check, Filter, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from "react";
 
 interface ProductSearchFormProps {
-    categories: string[];
+    categories: Category[];
 }
 
 const statuses = [
@@ -28,14 +24,62 @@ const statuses = [
         value: "DRAFT",
         label: "Nháp",
     },
+    {
+        value: "DRAFT1",
+        label: "Nháp1",
+    },
+    {
+        value: "DRAFT2",
+        label: "Nháp2",
+    },
+    {
+        value: "DRAFT3",
+        label: "Nháp",
+    }
 ]
+
+export function convertCategoriesToOptions(categories: Category[]): ComboboxOption[] {
+    const allOptions: ComboboxOption[] = [];
+
+    /**
+     * Hàm đệ quy để xử lý các cấp danh mục.
+     * @param currentCategories - Mảng danh mục ở cấp hiện tại
+     * @param prefix - Tiền tố nhãn (ví dụ: "Quần áo >")
+     */
+    function processCategories(currentCategories: Category[], prefix: string) {
+        if (!currentCategories || currentCategories.length === 0) {
+            return;
+        }
+
+        currentCategories.forEach(category => {
+            // Tạo nhãn mới. Nếu có tiền tố, thêm vào.
+            // Ví dụ: "" + "Quần áo" -> "Quần áo"
+            // Hoặc: "Quần áo" + "Áo Sơ mi" -> "Quần áo > Áo Sơ mi"
+            const newLabel = prefix ? `${prefix} > ${category.name}` : category.name;
+
+            // 1. Thêm danh mục hiện tại vào danh sách
+            allOptions.push({
+                value: category.id.toString(),
+                label: newLabel
+            });
+
+            // 2. Gọi đệ quy cho các con của nó, với nhãn hiện tại là tiền tố mới
+            processCategories(category.children, newLabel);
+        });
+    }
+
+    // Bắt đầu quá trình với các danh mục gốc (không có tiền tố)
+    processCategories(categories, "");
+
+    return allOptions;
+}
 
 export function ProductSearchForm({ categories }: ProductSearchFormProps) {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
-
+    const categoryOptions = convertCategoriesToOptions(categories);
     const [localSearch, setLocalSearch] = useState(searchParams.get('name') || '');
 
     const [localStatus, setLocalStatus] = useState(
@@ -55,16 +99,12 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
             params.delete('name');
         }
 
-        // 4. CẬP NHẬT LOGIC GỬI PARAM CHO STATUS
-        // Nếu localStatus là string (có giá trị), thì set
-        // Nếu là string rỗng, thì xóa param
         if (localStatus) {
             params.set('status', localStatus);
         } else {
             params.delete('status');
         }
 
-        // Logic của category giữ nguyên
         if (localCategory.length > 0) {
             params.set('category', localCategory.join(','));
         } else {
@@ -78,20 +118,8 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         });
     };
 
-    // 5. HÀM NÀY GIỜ CHỈ DÀNH CHO CATEGORY
-    const toggleLocalCategory = (value: string) => {
-        const newFilter = [...localCategory];
-        if (newFilter.includes(value)) {
-            setLocalCategory(newFilter.filter((v) => v !== value));
-        } else {
-            newFilter.push(value);
-            setLocalCategory(newFilter);
-        }
-    };
-
     const clearFilters = () => {
         setLocalSearch('');
-        // 6. ĐƯA STATUS VỀ STRING RỖNG KHI CLEAR
         setLocalStatus('');
         setLocalCategory([]);
 
@@ -106,20 +134,11 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         });
     };
 
-    // Hàm này giờ chỉ dùng cho Category, nhưng vẫn giữ tên chung
-    const getFilterDisplay = (filter: string[], defaultText: string) => {
-        if (filter.length === 0) return defaultText;
-        if (filter.length === 1) return filter[0];
-        return `${filter.length} selected`;
-    };
-
-    // 7. CẬP NHẬT ĐIỀU KIỆN HIỂN THỊ NÚT CLEAR
     const showClearButton = localSearch.length > 0 || localStatus.length > 0 || localCategory.length > 0;
 
     return (
         <Card className="mb-6 border-border bg-card p-4">
             <div className="flex flex-col gap-4">
-                {/* --- Ô SEARCH INPUT --- */}
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -143,34 +162,12 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
                         onChange={setLocalStatus}
                         label="Trạng thái"
                     />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 border-border text-foreground bg-transparent"
-                                disabled={isPending}
-                            >
-                                <Filter className="h-4 w-4" />
-                                Category: <span className="font-semibold capitalize">{getFilterDisplay(localCategory, 'All')}</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                            {categories.map((category) => (
-                                <DropdownMenuItem
-                                    key={category}
-                                    onSelect={(e) => e.preventDefault()}
-                                    onClick={() => toggleLocalCategory(category)}
-                                    className="flex items-center gap-2 cursor-pointer"
-                                >
-                                    {localCategory.includes(category) && <Check className="h-4 w-4" />}
-                                    <span className={localCategory.includes(category) ? "font-semibold" : ""}>{category}</span>
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* --- NÚT CLEAR --- */}
+                    <MultiSelectCombobox
+                        options={categoryOptions}
+                        value={undefined}
+                        onChange={setLocalCategory}
+                        placeholder="Choose frameworks..."
+                    />
                     {showClearButton && (
                         <Button
                             variant="ghost"

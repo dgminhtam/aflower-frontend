@@ -61,14 +61,20 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
           )}
           {category.image ? (
             <Image
-              src={category.image.urlThumbnail || "/placeholder.svg"}
+              src={category.image.urlThumbnail || "/placeholder.webp"}
               alt={category.image.altText || category.name}
               className="w-10 h-10 rounded-md object-cover flex-shrink-0"
               width={150}
               height={150}
             />
           ) : (
-            <div className="w-10 h-10 rounded-md bg-muted flex-shrink-0" />
+            <Image
+              src={"/placeholder.webp"}
+              alt={category.name}
+              className="w-10 h-10 rounded-md object-cover flex-shrink-0"
+              width={150}
+              height={150}
+            />
           )}
           <div className="flex-1">
             <Link

@@ -1,41 +1,41 @@
 "use client"
 
-import * as React from "react"
+import { BookOpen, GalleryVerticalEnd, Plus, Settings2, SquareTerminal } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { BookOpen, GalleryVerticalEnd, Settings2, SquareTerminal, Plus } from "lucide-react"
+import * as React from "react"
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
   SidebarGroup,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarRail,
   useSidebar,
 } from "@workspace/ui/components/sidebar"
-import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from "lucide-react"
+import { ChevronsUpDown, LogOut } from "lucide-react"
 
+import { SignOutButton } from "@clerk/nextjs"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@workspace/ui/components/collapsible"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@workspace/ui/components/dropdown-menu"
-import { SignOutButton } from "@clerk/nextjs"
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@workspace/ui/components/collapsible"
+import Link from "next/link"
 
 type SimpleUser = {
   imageUrl: string
@@ -126,7 +126,6 @@ function NavMain({
       <SidebarMenu>
         {items.map((item) => {
           const isActive = hasActiveSubItem(item.items)
-
           return (
             <Collapsible key={item.title} asChild defaultOpen={isActive} className="group/collapsible">
               <SidebarMenuItem>
@@ -141,13 +140,10 @@ function NavMain({
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => {
                       const isSubItemActive = pathname === subItem.url
-
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild isActive={isSubItemActive}>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
+                            <Link href={subItem.url}>{subItem.title}</Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       )

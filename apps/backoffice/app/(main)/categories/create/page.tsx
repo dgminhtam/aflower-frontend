@@ -1,4 +1,4 @@
-import { getCategoryTree } from "@/app/lib/categories/action";
+import { getCategoryTree } from "@/app/api/categories/action";
 import CreateCategoryForm from "@/components/create-category-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
 import { Separator } from "@workspace/ui/components/separator"

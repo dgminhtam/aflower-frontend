@@ -1,4 +1,4 @@
-import { getCategoryById, getCategoryTree, updateCategory } from "@/app/lib/categories/action";
+import { getCategoryById, getCategoryTree, updateCategory } from "@/app/api/categories/action";
 import { UpdateCategoryRequest } from "@/app/lib/categories/definitions";
 
 import UpdateCategoryForm from "@/components/update-category-form";

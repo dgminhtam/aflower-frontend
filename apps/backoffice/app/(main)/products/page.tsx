@@ -3,6 +3,7 @@ import { getProducts } from "@/app/api/products/action";
 import { ProductListPage } from "@/app/(main)/products/product-list";
 import { Separator } from "@workspace/ui/components/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { getCategoryTree } from "@/app/api/categories/action";
 
 export default async function Page({
   searchParams,
@@ -11,6 +12,7 @@ export default async function Page({
 }) {
     const filters = await searchParams
     const productPage = await getProducts(filters);
+    const categoryTree = await getCategoryTree();
     return (
         <Card>
             <CardHeader>
@@ -19,7 +21,7 @@ export default async function Page({
             </CardHeader>
             <Separator />
             <CardContent>
-                <ProductListPage productPage={productPage}/>
+                <ProductListPage productPage={productPage} categories={categoryTree}/>
             </CardContent>
         </Card>
     );

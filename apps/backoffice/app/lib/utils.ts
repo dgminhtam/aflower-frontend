@@ -34,20 +34,10 @@ export function formatDate(dateString: string | Date): string {
     second: "2-digit",
   }).format(date);
 }
-
-/**
- * (Helper) Vô hiệu hóa ký tự đặc biệt trong chuỗi
- * để chống lỗi Query Injection.
- */
 function sanitize(term: string): string {
-  // Thay thế mọi dấu nháy đơn ' bằng hai dấu nháy đơn ''
   return term.replace(/'/g, "''");
 }
 
-/**
- * Chuyển đổi điều kiện tìm kiếm thành chuỗi query RSQL/SQL an toàn.
- * ĐÃ SỬA LỖI BẢO MẬT INJECTION.
- */
 export const convertSearchCondition = (key: string, operator: string, term: string | string[]) => {
   const supportedOperators = [
     'eq', 'ne', 'gt', 'ge', 'lt', 'le',
@@ -67,11 +57,9 @@ export const convertSearchCondition = (key: string, operator: string, term: stri
   switch (operator) {
     case 'in':
     case 'nin':
-      // Xử lý mảng: ['a', 'b'] => "'a','b'"
       if (Array.isArray(term)) {
         safeTerm = term.map(t => `'${sanitize(t)}'`).join(',');
       } else {
-        // Xử lý chuỗi: "a,b" => "'a','b'"
         safeTerm = String(term).split(',').map(t => `'${sanitize(t)}'`).join(',');
       }
       return `${key} ${operator} (${safeTerm})`;
@@ -88,18 +76,14 @@ export const convertSearchCondition = (key: string, operator: string, term: stri
     case 'notNull':
     case 'empty':
     case 'notEmpty':
-      return `${key} ${operator}`; // Các toán tử này không cần 'term'
+      return `${key} ${operator}`;
 
     default:
       safeTerm = Array.isArray(term) ? (term[0] ?? "") : term;
-
-      // Xử lý cho SỐ (ví dụ: age[gt]=20)
       if (['gt', 'ge', 'lt', 'le'].includes(operator) && !isNaN(Number(safeTerm))) {
-        return `${key} ${operator} ${safeTerm}`; // Không bọc số trong nháy
+        return `${key} ${operator} ${safeTerm}`;
       }
       
-      // Xử lý cho CHUỖI
-      // Vô hiệu hóa (sanitize) term trước khi bọc
       return `${key} ${operator} '${sanitize(safeTerm)}'`;
   }
 };
