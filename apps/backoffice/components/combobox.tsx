@@ -8,9 +8,8 @@ import {
     Command,
     CommandEmpty,
     CommandGroup,
-    CommandInput,
     CommandItem,
-    CommandList,
+    CommandList
 } from "@workspace/ui/components/command"
 import {
     Popover,
@@ -26,8 +25,8 @@ export interface ComboboxOption {
 
 interface StatusComboboxProps {
     options: readonly ComboboxOption[]
-    defaultValue: string | undefined
-    onChange: (value: string) => void
+    defaultValue?: string | undefined
+    onChange: (valueChange: string) => void
     disabled?: boolean
     placeholder?: string
     label?: string
@@ -38,7 +37,6 @@ export function Combobox({
     defaultValue,
     onChange,
     disabled,
-    placeholder = "Tìm kiếm...",
     label,
 }: StatusComboboxProps) {
     const [open, setOpen] = React.useState(false)
@@ -72,9 +70,8 @@ export function Combobox({
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[200px] p-0">
+            <PopoverContent className="min-w-sm p-0">
                 <Command>
-                    <CommandInput placeholder={placeholder} className="h-9" />
                     <CommandList>
                         <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
                         <CommandGroup>

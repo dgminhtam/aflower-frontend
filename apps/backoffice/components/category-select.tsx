@@ -102,7 +102,7 @@ export function CategorySelect({
 
   return (
     <div className="space-y-2">
-      <Select value={internalValue} onValueChange={handleValueChange}>
+      <Select value={internalValue} onValueChange={handleValueChange} defaultValue={String(value)}>
         <SelectTrigger id="parent-category" className="w-full">
           <SelectValue placeholder="Chọn danh mục cha (tùy chọn)" />
         </SelectTrigger>
