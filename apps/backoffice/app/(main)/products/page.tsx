@@ -1,18 +1,26 @@
 
-import { getProducts } from "@/app/api/products/action";
 import { ProductListPage } from "@/app/(main)/products/product-list";
-import { Separator } from "@workspace/ui/components/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { getCategoryTree } from "@/app/api/categories/action";
+import { getProducts } from "@/app/api/products/action";
+import { buildFilterQuery, buildSortQuery } from "@/app/lib/utils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Separator } from "@workspace/ui/components/separator";
 
 export default async function Page({
-  searchParams,
+    searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const filters = await searchParams
-    const productPage = await getProducts(filters);
-    const categoryTree = await getCategoryTree();
+    const { page = '0', size = '10', sort = '', ...searchFields } = await searchParams;
+    const [productPage, categoryTree] = await Promise.all([
+        getProducts({
+            filter: buildFilterQuery(searchFields),
+            page: Number(page) - 1,
+            size: Number(size),
+            sort: buildSortQuery(sort),
+        }),
+        getCategoryTree(),
+    ]);
     return (
         <Card>
             <CardHeader>
@@ -21,7 +29,7 @@ export default async function Page({
             </CardHeader>
             <Separator />
             <CardContent>
-                <ProductListPage productPage={productPage} categories={categoryTree}/>
+                <ProductListPage productPage={productPage} categories={categoryTree} />
             </CardContent>
         </Card>
     );

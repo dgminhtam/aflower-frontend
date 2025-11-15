@@ -255,7 +255,7 @@ const data = {
       items: [
         {
           title: "Media",
-          url: "/media",
+          url: "/medias",
         },
       ],
     },

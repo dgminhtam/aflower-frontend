@@ -19,6 +19,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 import { toast } from "sonner"
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@workspace/ui/components/item"
 
 interface CategoryNodeProps {
   category: Category
@@ -43,81 +44,79 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
       setIsAlertOpen(false)
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Đã có lỗi xảy ra khi xóa danh mục.")
+      toast.error('Đã có lỗi xảy ra khi xóa danh mục.');
       setIsDeleting(false)
     }
   }
 
   return (
-    <div className="select-none">
-      <div className={`flex items-center gap-2 rounded-lg hover:bg-muted/50 transition-colors bg-background border border-border ${level != 0 ? "ml-3" : ""} my-2 p-1`}>
-        <div className="flex items-center gap-3 flex-1 px-3 py-2 text-left">
-          {hasChildren ? (
-            <Button onClick={() => onToggleExpand?.(category.id)} variant="ghost" size="icon">
-              {isExpanded ? <ChevronRight /> : <ChevronDown />}
-            </Button>
-          ) : (
-            <Button variant="ghost" size="icon"></Button>
-          )}
-          {category.image ? (
+    <div>
+        <Item variant="outline" className={`my-2 ${level !== 0 ? 'ml-3' : ''}`}>
+          {/* Expand/collapse button and category image as media */}
+          <ItemMedia className="flex items-center gap-1">
+            {hasChildren ? (
+              <Button
+                onClick={() => onToggleExpand?.(category.id)}
+                size="icon"
+                variant={"ghost"}
+              >
+                {isExpanded ? <ChevronDown /> : <ChevronRight />}
+              </Button>
+            ) : (
+              <div className="h-8 w-8" />
+            )}
             <Image
-              src={category.image.urlThumbnail || "/placeholder.webp"}
-              alt={category.image.altText || category.name}
+              src={category.image?.urlThumbnail || '/placeholder.webp'}
+              alt={category.image?.altText || category.name}
               className="w-10 h-10 rounded-md object-cover flex-shrink-0"
               width={150}
               height={150}
             />
-          ) : (
-            <Image
-              src={"/placeholder.webp"}
-              alt={category.name}
-              className="w-10 h-10 rounded-md object-cover flex-shrink-0"
-              width={150}
-              height={150}
-            />
-          )}
-          <div className="flex-1">
+          </ItemMedia>
+
+          {/* Category name and slug as content */}
+          <ItemContent>
             <Link
               href={`/categories/${category.id}`}
               prefetch={false}
-              className="flex-1 font-medium text-foreground hover:text-primary hover:underline transition-colors"
+              className="font-medium text-foreground hover:text-primary hover:underline transition-colors"
             >
-              {category.name}
+              <ItemTitle>{category.name}</ItemTitle>
             </Link>
-            <p className="text-xs text-muted-foreground">{category.slug}</p>
-          </div>
-          <div className="flex items-right">
+            <ItemDescription>{category.slug}</ItemDescription>
+          </ItemContent>
+
+          {/* Badge and actions menu */}
+          <ItemActions className="flex items-center gap-2">
             {category.active ? (
               <Badge className="bg-green-600">Hoạt động</Badge>
             ) : (
               <Badge variant="destructive">Không hoạt động</Badge>
             )}
-          </div>
-        </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant={"ghost"} size="icon">
-              <MoreVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/categories/${category.id}`}>
-                Sửa
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setIsAlertOpen(true)}
-              className="text-destructive"
-              onSelect={(e) => e.preventDefault()}
-            >
-              Xóa
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href={`/categories/${category.id}`}>Sửa</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setIsAlertOpen(true)}
+                  className="text-destructive"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  Xóa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ItemActions>
+        </Item>
 
+      {/* Nested children */}
       {hasChildren && isExpanded && (
         <div className="border-l border-border ml-3">
           {category.children.map((child) => (
@@ -131,6 +130,7 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
           ))}
         </div>
       )}
+
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -152,7 +152,7 @@ function CategoryNode({ category, level = 0, expandedIds = new Set(), onToggleEx
                   Đang xóa...
                 </>
               ) : (
-                "Xác nhận"
+                'Xác nhận'
               )}
             </Button>
           </AlertDialogFooter>

@@ -51,37 +51,39 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
     const categoryOptions = convertCategoriesToMultiSelectOptions(categories);
-    const [localSearch, setLocalSearch] = useState(searchParams.get('name') || '');
-    const [localStatus, setLocalStatus] = useState(
-        searchParams.get('status') || ''
-    );
 
-    const [localCategory, setLocalCategory] = useState(
-        searchParams.get('category')?.split(',') || []
-    );
+    const defaultName = searchParams.get("name[containsIgnoreCase]") || "";
+    const defaultStatus = searchParams.get("status[eq]") || "";
+    const defaultCategory = searchParams.get("category.id[in]")?.split(",") || [];
+
+    const [localSearch, setLocalSearch] = useState(defaultName);
+    const [localStatus, setLocalStatus] = useState(defaultStatus);
+    const [localCategory, setLocalCategory] = useState<string[]>(defaultCategory);
 
     const handleSearchSubmit = () => {
         const params = new URLSearchParams(searchParams.toString());
 
-        if (localSearch) {
-            params.set('name', localSearch);
+        if (localSearch.trim()) {
+            params.set("name[containsIgnoreCase]", localSearch.trim());
+            params.set("sku[eq]", localSearch.trim());
         } else {
-            params.delete('name');
+            params.delete("name[containsIgnoreCase]");
+            params.delete("sku[eq]");
         }
 
         if (localStatus) {
-            params.set('status', localStatus);
+            params.set("status[eq]", localStatus);
         } else {
-            params.delete('status');
+            params.delete("status[eq]");
         }
 
         if (localCategory.length > 0) {
-            params.set('category', localCategory.join(','));
+            params.set("category.id[in]", localCategory.join(","));
         } else {
-            params.delete('category');
+            params.delete("category.id[in]");
         }
 
-        params.set('page', '1');
+        params.set("page", "1");
 
         startTransition(() => {
             router.push(`${pathname}?${params.toString()}`);
@@ -94,10 +96,11 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         setLocalCategory([]);
 
         const params = new URLSearchParams(searchParams.toString());
-        params.delete('name');
-        params.delete('status');
-        params.delete('category');
-        params.set('page', '1');
+        params.delete("name[containsIgnoreCase]");
+        params.delete("sku[eq]");
+        params.delete("status[eq]");
+        params.delete("category.id[in]");
+        params.set("page", "1");
     };
 
     const showClearButton = localSearch.length > 0 || localStatus.length > 0 || localCategory.length > 0;
@@ -141,12 +144,11 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
                     {showClearButton && (
                         <Button
                             variant="ghost"
-                            size="sm"
                             onClick={clearFilters}
                             disabled={isPending}
-                            className="text-muted-foreground hover:text-foreground gap-2"
+                            size={"lg"}
                         >
-                            <X className="h-4 w-4" />
+                            <X />
                             Clear
                         </Button>
                     )}

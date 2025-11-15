@@ -65,7 +65,13 @@ export function Combobox({
                     disabled={disabled}
                     className="min-w-sm justify-between"
                 >
-                    {selectedLabel || label}
+
+                    {selectedLabel ? (
+                        <span>{selectedLabel}</span>
+                    ) : (
+                        <span className="text-muted-foreground">{label}</span>
+                    )}
+
                     <ChevronsUpDown className="opacity-50" />
                 </Button>
             </PopoverTrigger>
