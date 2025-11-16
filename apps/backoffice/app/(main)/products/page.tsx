@@ -11,7 +11,7 @@ export default async function Page({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const { page = '0', size = '10', sort = '', ...searchFields } = await searchParams;
+    const { page = '0', size = '12', sort = '', ...searchFields } = await searchParams;
     const [productPage, categoryTree] = await Promise.all([
         getProducts({
             filter: buildFilterQuery(searchFields),

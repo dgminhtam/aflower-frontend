@@ -1,15 +1,18 @@
 "use client"
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Upload, X, Loader2, CheckCircle2Icon } from "lucide-react"
+import { uploadMedia } from "@/app/api/medias/action"
+import { Media } from "@/app/lib/media/definitions"
 import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
-import { uploadMedia } from "@/app/api/medias/action"
-import { Media } from "@/app/lib/categories/definitions"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import { Loader2, Upload, X } from "lucide-react"
 import Image from "next/image"
+import type React from "react"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
 
 interface ImageUploadProps {
   value?: number | null
@@ -19,11 +22,10 @@ interface ImageUploadProps {
   error?: string
 }
 
-export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, error }: ImageUploadProps) {
+export function ImageUpload({ initialMedia, onChange, onUploadSuccess, error }: ImageUploadProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadedMedia, setUploadedMedia] = useState<Media | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [uploadError, setUploadError] = useState<string>("")
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [hasUploadedInternally, setHasUploadedInternally] = useState(false)
@@ -35,14 +37,40 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
     } else if (!initialMedia && !hasUploadedInternally) {
       setImagePreview(null)
       setUploadedMedia(null)
-      setUploadError("")
     }
   }, [initialMedia, hasUploadedInternally])
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Có lỗi xảy ra", {
+        description: error,
+      })
+    }
+  }, [error])
+
+  const validateFile = (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      return "File quá lớn. Kích thước tối đa là 5MB."
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return "Loại file không hợp lệ. Chỉ chấp nhận PNG, JPG, WEBP."
+    }
+    return null // Không có lỗi
+  }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
+    // 3. Sử dụng validateFile
+    const validationError = validateFile(file)
+    if (validationError) {
+      toast.error("File không hợp lệ", { description: validationError })
+      // Reset input để người dùng có thể chọn lại file (kể cả file cũ)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+      return
+    }
     const reader = new FileReader()
     reader.onloadend = () => {
       const result = reader.result as string
@@ -51,7 +79,6 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
     reader.readAsDataURL(file)
 
     setIsLoading(true)
-    setUploadError("")
 
     try {
       const formData = new FormData()
@@ -63,9 +90,14 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
       onChange?.(media.id)
       onUploadSuccess?.(media)
       setHasUploadedInternally(true)
+      toast.success("Upload thành công!", {
+        description: `File ${file.name} đã được tải lên.`,
+      })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Upload failed"
-      setUploadError(errorMessage)
+      toast.error("Upload thất bại", {
+        description: errorMessage,
+      })
       setImagePreview(initialMedia?.urlMedium || null)
     } finally {
       setIsLoading(false)
@@ -92,7 +124,16 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
     const files = e.dataTransfer.files
     if (files && files.length > 0) {
       const file = files[0]
+
+      // 4. Sử dụng validateFile (kiểm tra type trước cho nhanh)
       if (file != undefined && file.type.startsWith("image/")) {
+
+        const validationError = validateFile(file)
+        if (validationError) {
+          toast.error("File không hợp lệ", { description: validationError })
+          return
+        }
+
         const dataTransfer = new DataTransfer()
         dataTransfer.items.add(file)
         fileInputRef.current!.files = dataTransfer.files
@@ -100,7 +141,9 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
           target: { files: dataTransfer.files },
         } as React.ChangeEvent<HTMLInputElement>)
       } else {
-        setUploadError("Please drop an image file")
+        toast.error("File không hợp lệ", {
+          description: "Vui lòng chỉ thả file hình ảnh.",
+        })
       }
     }
   }
@@ -108,7 +151,6 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
   const handleClearImage = () => {
     setImagePreview(null)
     setUploadedMedia(null)
-    setUploadError("")
     onChange?.(undefined)
     setHasUploadedInternally(false)
     if (fileInputRef.current) {
@@ -175,23 +217,11 @@ export function ImageUpload({ value, initialMedia, onChange, onUploadSuccess, er
         )}
         <Input ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={ALLOWED_TYPES.join(",")}
           onChange={handleImageChange}
           disabled={isLoading}
           className="hidden" />
       </div>
-
-      {uploadedMedia && hasUploadedInternally && (
-        <Alert>
-          <CheckCircle2Icon />
-          <AlertTitle>Upload thành công!</AlertTitle>
-          <AlertDescription>
-            URL: {uploadedMedia.urlOriginal}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {(error || uploadError) && <p className="text-sm text-destructive">{error || uploadError}</p>}
     </div>
   )
 }

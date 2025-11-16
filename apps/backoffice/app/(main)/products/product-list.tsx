@@ -49,9 +49,8 @@ export function ProductListPage({ productPage, categories }: ProductListProps) {
     <div className="w-full">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2">
-          <Button>
-            <Plus />
-            Tạo sản phẩm mới
+          <Button asChild>
+            <Link href="/products/create" ><Plus /> Tạo sản phẩm mới</Link>
           </Button>
           <Button variant={"outline"}>
             <Upload />

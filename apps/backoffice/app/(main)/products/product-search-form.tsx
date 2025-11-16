@@ -1,6 +1,7 @@
 "use client";
 
 import { Category } from "@/app/lib/categories/definitions";
+import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils";
 import { Combobox } from "@/components/combobox";
 import { MultiSelectCombobox, MultiSelectOption } from "@/components/multiple-select-combobox";
 import { Button } from "@workspace/ui/components/button";
@@ -25,25 +26,6 @@ const statuses = [
         label: "Nháp",
     }
 ]
-
-export function convertCategoriesToMultiSelectOptions(
-    categories: Category[] | undefined | null
-): MultiSelectOption[] {
-    if (!categories || categories.length === 0) {
-        return [];
-    }
-    return categories.map(category => {
-        const transformedChildren = convertCategoriesToMultiSelectOptions(category.children);
-        const option: MultiSelectOption = {
-            value: category.id.toString(),
-            label: category.name
-        };
-        if (transformedChildren && transformedChildren.length > 0) {
-            option.children = transformedChildren;
-        }
-        return option;
-    });
-}
 
 export function ProductSearchForm({ categories }: ProductSearchFormProps) {
     const pathname = usePathname();

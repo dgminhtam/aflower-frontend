@@ -1,7 +1,7 @@
 import { getCategoryById, getCategoryTree, updateCategory } from "@/app/api/categories/action";
 import { UpdateCategoryRequest } from "@/app/lib/categories/definitions";
 
-import UpdateCategoryForm from "@/components/update-category-form";
+import UpdateCategoryForm from "@/app/(main)/categories/[id]/update-category-form";
 import {
   Card,
   CardContent,

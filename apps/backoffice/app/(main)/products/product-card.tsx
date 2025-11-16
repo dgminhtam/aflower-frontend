@@ -3,8 +3,9 @@ import { formatCurrency } from "@/app/lib/utils";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface ProductCardProps {
     product: Product
@@ -34,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 />
             </div>
             <div className="p-2">
-                <h3 className="font-semibold text-foreground line-clamp-2">{product.name}</h3>
+                <Link href={`/products/${product.id}`} className="font-semibold text-foreground line-clamp-2">{product.name}</Link>
                 <p className="text-sm text-muted-foreground mb-3">{product.category?.name}</p>
 
                 <div className="mb-3 flex items-center justify-between">
@@ -54,9 +55,9 @@ export function ProductCard({ product }: ProductCardProps) {
                         size="sm"
                         className="flex-1 gap-2 border-border"
                         title="Edit"
+                        asChild
                     >
-                        <Edit2 className="h-4 w-4" />
-                        Edit
+                        <Link href={`/products/${product.id}`} className="font-semibold text-foreground line-clamp-2"><Edit />Edit</Link>
                     </Button>
                     <Button
                         variant="outline"
