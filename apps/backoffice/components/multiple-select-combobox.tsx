@@ -31,9 +31,6 @@ export interface MultiSelectOption {
   children?: MultiSelectOption[]
 }
 
-// --- BẮT ĐẦU THAY ĐỔI PROPS ---
-
-// 1. Props chung
 interface MultiSelectComboboxBaseProps {
   options: MultiSelectOption[]
   placeholder?: string
@@ -41,56 +38,45 @@ interface MultiSelectComboboxBaseProps {
   error?: string
 }
 
-// 2. Props cho mode 'single'
 interface MultiSelectComboboxSingleProps extends MultiSelectComboboxBaseProps {
   mode: 'single'
   value: string | null
   onChange: (value: string | null) => void
 }
 
-// 3. Props cho mode 'multiple'
 interface MultiSelectComboboxMultipleProps extends MultiSelectComboboxBaseProps {
   mode: 'multiple'
   value: string[] | null
   onChange: (value: string[]) => void
 }
 
-// 4. Gộp lại thành một type duy nhất
 export type MultiSelectComboboxProps =
   | MultiSelectComboboxSingleProps
   | MultiSelectComboboxMultipleProps
 
-// --- KẾT THÚC THAY ĐỔI PROPS ---
-
 export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
-  // Destructure props chung
+
   const { options, error, placeholder = 'Select items...', disabled = false } = props
 
-  // State
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set())
   const [open, setOpen] = useState(false)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
 
-  // Đồng bộ prop `value` từ bên ngoài vào `selectedSet` bên trong
   useEffect(() => {
     if (props.mode === 'multiple') {
-      // TS biết `props.value` là `string[] | null`
       setSelectedSet(new Set(props.value || []))
     } else if (props.mode === 'single') {
-      // TS biết `props.value` là `string | null`
       setSelectedSet(new Set(props.value ? [props.value] : []))
     }
-  }, [props.value, props.mode]) // Thêm props.value và props.mode
+  }, [props.value, props.mode])
 
   const handleSelect = useCallback(
     (optionValue: string) => {
       if (props.mode === 'single') {
-        // TS biết `props.onChange` là (value: string | null) => void
         setSelectedSet(new Set([optionValue]))
         props.onChange(optionValue)
         setOpen(false)
       } else if (props.mode === 'multiple') {
-        // TS biết `props.onChange` là (value: string[]) => void
         const newSet = new Set(selectedSet)
         if (newSet.has(optionValue)) {
           newSet.delete(optionValue)
@@ -102,17 +88,14 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
         props.onChange(newArray)
       }
     },
-    // Thêm props.mode và props.onChange vào dependencies
     [props.mode, props.onChange, selectedSet]
   )
 
   const handleClear = useCallback(() => {
     setSelectedSet(new Set())
     if (props.mode === 'single') {
-      // TS biết `props.onChange` là (value: string | null) => void
-      props.onChange(null) // Trả về null thay vì ''
+      props.onChange(null)
     } else if (props.mode === 'multiple') {
-      // TS biết `props.onChange` là (value: string[]) => void
       props.onChange([])
     }
   }, [props.mode, props.onChange])
@@ -124,10 +107,8 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
       setSelectedSet(newSet)
 
       if (props.mode === 'single') {
-        // TS biết `props.onChange` là (value: string | null) => void
-        props.onChange(null) // Trả về null thay vì ''
+        props.onChange(null)
       } else if (props.mode === 'multiple') {
-        // TS biết `props.onChange` là (value: string[]) => void
         const newArray = Array.from(newSet)
         props.onChange(newArray)
       }
@@ -239,7 +220,9 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
       <div key={option.value}>
         <div className="flex items-center">
           {option.children && option.children.length > 0 ? (
-            <button
+            <Button
+              variant={"ghost"}
+              size={"icon-sm"}
               onClick={(e) => {
                 e.stopPropagation()
                 setExpandedNodes((prev) => {
@@ -259,7 +242,7 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           ) : (
             <div className="w-6 shrink-0" />
           )}
@@ -294,7 +277,7 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
           role="combobox"
           aria-expanded={open}
           className={cn(
-            'min-w-sm justify-between w-full',
+            'min-w-sm justify-between',
             error && 'border-destructive focus-visible:ring-destructive'
           )}
           disabled={disabled}
@@ -311,11 +294,8 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
             <CommandSeparator />
             {selectedSet.size > 0 && (
               <CommandGroup>
-                <CommandItem onSelect={handleClear}>
-                  <span className="text-muted-foreground">
-                    {/* Sửa lại văn bản để không hiển thị [object Set] */}
-                    Clear selection ({selectedSet.size})
-                  </span>
+                <CommandItem onSelect={handleClear} className="text-muted-foreground">
+                  Clear selection ({selectedSet.size})
                 </CommandItem>
               </CommandGroup>
             )}

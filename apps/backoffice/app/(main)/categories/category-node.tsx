@@ -45,9 +45,8 @@ export function CategoryNode({ category, level = 0, expandedIds = new Set(), onT
   }
 
   return (
-    <div>
-      <Item variant="outline" className={`my-2 ${level !== 0 ? 'ml-3' : ''}`}>
-        {/* Expand/collapse button and category image as media */}
+    <div className={`my-2 ${level > 0 ? 'ml-3' : ''}`}>
+      <Item variant="outline" className={`"`}>
         <ItemMedia className="flex items-center gap-1">
           {hasChildren ? (
             <Button
@@ -68,8 +67,6 @@ export function CategoryNode({ category, level = 0, expandedIds = new Set(), onT
             height={150}
           />
         </ItemMedia>
-
-        {/* Category name and slug as content */}
         <ItemContent>
           <Link
             href={`/categories/${category.id}`}
@@ -81,7 +78,6 @@ export function CategoryNode({ category, level = 0, expandedIds = new Set(), onT
           <ItemDescription>{category.slug}</ItemDescription>
         </ItemContent>
 
-        {/* Badge and actions menu */}
         <ItemActions className="flex items-center gap-2">
           {category.active ? (
             <Badge className="bg-green-600">Hoạt động</Badge>
@@ -110,8 +106,6 @@ export function CategoryNode({ category, level = 0, expandedIds = new Set(), onT
           </DropdownMenu>
         </ItemActions>
       </Item>
-
-      {/* Nested children */}
       {hasChildren && isExpanded && (
         <div className="border-l border-border ml-3">
           {category.children.map((child) => (

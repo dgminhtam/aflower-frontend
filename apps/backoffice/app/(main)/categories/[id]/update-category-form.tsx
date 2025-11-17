@@ -1,6 +1,7 @@
 "use client"
 
-import type { Category, UpdateCategoryRequest } from "@/app/lib/categories/definitions"
+import { updateCategory } from "@/app/api/categories/action"
+import type { Category } from "@/app/lib/categories/definitions"
 import { Media } from "@/app/lib/media/definitions"
 import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils"
 import { MultiSelectCombobox } from "@/components/multiple-select-combobox"
@@ -11,13 +12,14 @@ import { Input } from "@workspace/ui/components/input"
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
+import { Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { ImageUpload } from "../../../../components/image-upload"
 
-const formSchema = z.object({
+const updateCategorySchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(50, "Tên quá dài"),
   description: z.string().min(1, "Mô tả không được để trống").max(255, "Mô tả quá dài"),
   slug: z
@@ -30,25 +32,26 @@ const formSchema = z.object({
   parentId: z.number().nullable(),
 })
 
+export type UpdateCategoryRequest = z.infer<typeof updateCategorySchema>;
+
 interface UpdateCategoryFormProps {
-  categoryId: number
+  categoryId: number;
   initialData: {
-    name: string
-    description: string
-    slug: string
-    image?: Media
-    active: boolean
-    parentId?: number
+    name: string;
+    description: string;
+    slug: string;
+    image?: Media;
+    active: boolean;
+    parentId?: number;
   }
-  categories: Category[]
-  onUpdateCategory: (id: number, data: UpdateCategoryRequest) => Promise<void>
+  categories: Category[];
 }
 
-function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdateCategory }: UpdateCategoryFormProps) {
+function UpdateCategoryForm({ categoryId, initialData, categories = [] }: UpdateCategoryFormProps) {
   const router = useRouter()
   const categoryOptions = convertCategoriesToMultiSelectOptions(categories);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<UpdateCategoryRequest>({
+    resolver: zodResolver(updateCategorySchema),
     defaultValues: {
       name: initialData.name,
       description: initialData.description,
@@ -58,19 +61,9 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
       parentId: initialData.parentId
     },
   })
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    const updateCategoryRequest: UpdateCategoryRequest = {
-      name: values.name,
-      description: values.description,
-      slug: values.slug,
-      imageId: values.imageId,
-      active: values.active,
-      parentId: values.parentId,
-    }
-
+  async function onSubmit(updateCategoryRequest: UpdateCategoryRequest) {
     try {
-      await onUpdateCategory(categoryId, updateCategoryRequest)
+      await updateCategory(categoryId, updateCategoryRequest);
       toast.success("Cập nhật danh mục thành công!")
     } catch (error) {
       if (error instanceof Error) {
@@ -206,13 +199,11 @@ function UpdateCategoryForm({ categoryId, initialData, categories = [], onUpdate
       <div className="flex gap-4 pt-2 border-t border-border">
         <Button disabled={form.formState.isSubmitting} type="submit">
           {form.formState.isSubmitting ? (
-            <>
-              <Spinner />
-              Đang lưu...
-            </>
+            <Spinner />
           ) : (
-            "Cập nhật"
+            <Save />
           )}
+          Lưu danh mục
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Hủy

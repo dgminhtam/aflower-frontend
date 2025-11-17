@@ -19,6 +19,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
 import { Separator } from "@workspace/ui/components/separator"
+import { ProductGallery } from "@/components/gallery-upload"
 
 export const STATUS_VALUES = ["PUBLISHED", "DRAFT"] as const;
 export const createProductSchema = z.object({
@@ -351,55 +352,9 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
           </Field>
         )}
       />
-      <FieldSet className="gap-4">
-        <FieldLegend variant="label">Bộ sưu tập</FieldLegend>
-        <FieldDescription>
-          Thêm tối đa 5 tấm hình vào bộ sưu tập
-        </FieldDescription>
-        <FieldGroup className="grid grid-cols-3 gap-4">
-          {
-            fields.map((field, index) => (
-              <Controller
-                key={field.id}
-                name={`gallery.${index}`}
-                control={form.control}
-                render={({ field: controllerField, fieldState }) => (
-                  <Field orientation="horizontal" data-invalid={fieldState.invalid}>
-                    <FieldContent key={index}>
-                      <ImageUpload
-                      />
-                      {
-                        fields.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={() => remove(index)}
-                          >
-                            <X />
-                            Xóa ảnh
-                          </Button>
-                        )
-                      }
-
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                    </FieldContent>
-                  </Field>
-                )}
-              />
-            ))
-          }
-
-        </FieldGroup>
-      </FieldSet>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => append({ mediaId: 0 })}
-        disabled={fields.length >= 5}
-      >
-        Thêm 1 ảnh vào bộ sưu tập
-      </Button>
+      <ProductGallery 
+        onMediaIdsChange={(ids) => console.log("Media IDs:", ids)}
+      />
       <Separator />
       <div>
         <Button disabled={form.formState.isSubmitting} type="submit">

@@ -15,12 +15,3 @@ export interface Category {
 }
 
 export type CategoryResponse = Root<Category>;
-
-export type UpdateCategoryRequest = {
-  name: string
-  slug: string
-  description: string
-  parentId: number | null
-  active: boolean
-  imageId: number | null
-}

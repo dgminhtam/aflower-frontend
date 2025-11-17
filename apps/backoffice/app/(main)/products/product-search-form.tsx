@@ -3,7 +3,7 @@
 import { Category } from "@/app/lib/categories/definitions";
 import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils";
 import { Combobox } from "@/components/combobox";
-import { MultiSelectCombobox, MultiSelectOption } from "@/components/multiple-select-combobox";
+import { MultiSelectCombobox } from "@/components/multiple-select-combobox";
 import { Button } from "@workspace/ui/components/button";
 import { Card } from "@workspace/ui/components/card";
 import { Input } from "@workspace/ui/components/input";
@@ -36,7 +36,7 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
 
     const defaultName = searchParams.get("name[containsIgnoreCase]") || "";
     const defaultStatus = searchParams.get("status[eq]") || "";
-    const defaultCategory = searchParams.get("category.id[in]")?.split(",") || [];
+    const defaultCategory = searchParams.get("categories.id[in]")?.split(",") || [];
 
     const [localSearch, setLocalSearch] = useState(defaultName);
     const [localStatus, setLocalStatus] = useState(defaultStatus);
@@ -60,9 +60,9 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         }
 
         if (localCategory.length > 0) {
-            params.set("category.id[in]", localCategory.join(","));
+            params.set("categories.id[in]", localCategory.join(","));
         } else {
-            params.delete("category.id[in]");
+            params.delete("categories.id[in]");
         }
 
         params.set("page", "1");
@@ -81,7 +81,7 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         params.delete("name[containsIgnoreCase]");
         params.delete("sku[eq]");
         params.delete("status[eq]");
-        params.delete("category.id[in]");
+        params.delete("categories.id[in]");
         params.set("page", "1");
     };
 
@@ -106,7 +106,7 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
                     />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap  gap-2">
                     <Combobox
                         defaultValue={localStatus}
                         options={statuses}

@@ -25,7 +25,7 @@ export default async function Layout({
     username: user.username
   } : null;
   return (
-    <SidebarProvider>
+    <SidebarProvider >
       <AppSidebar user={simpleUser} 
             isAuthenticated={isAuthenticated}/>
       <SidebarInset>

@@ -1,15 +1,14 @@
-import { getCategoryById, getCategoryTree, updateCategory } from "@/app/api/categories/action";
-import { UpdateCategoryRequest } from "@/app/lib/categories/definitions";
 
-import UpdateCategoryForm from "@/app/(main)/categories/[id]/update-category-form";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { Suspense } from "react";
+import FetchData from "./fetch-data";
 
 interface UpdateCategoryPageProps {
   params: Promise<{
@@ -17,45 +16,19 @@ interface UpdateCategoryPageProps {
   }>
 }
 
-async function handleUpdateCategory(id: number, data: UpdateCategoryRequest) {
-  "use server"
-  try {
-    await updateCategory(id, data);
-  } catch (error) {
-    console.error("Lỗi cập nhật danh mục:", error);
-    throw error;
-  }
-}
-
 export default async function Page({ params }: UpdateCategoryPageProps) {
   const { id } = await params;
   const categoryId = Number(id);
-  const [category, categories] = await Promise.all([
-    getCategoryById(categoryId),
-    getCategoryTree()
-  ]);
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cập nhật</CardTitle>
+        <CardTitle><h3>Cập nhật</h3></CardTitle>
         <CardDescription>Chỉnh sửa thông tin</CardDescription>
       </CardHeader>
       <Separator />
-      <CardContent>
-        <UpdateCategoryForm
-          categoryId={categoryId}
-          initialData={{
-            name: category.name,
-            description: category.description || "",
-            slug: category.slug || "",
-            image: category.image,
-            active: category.active !== false,
-            parentId: category.parentId,
-          }}
-          categories={categories}
-          onUpdateCategory={handleUpdateCategory}
-        />
-      </CardContent>
+      <Suspense fallback={<Skeleton />}>
+        <FetchData id={categoryId} />
+      </Suspense>
     </Card>
   );
 }

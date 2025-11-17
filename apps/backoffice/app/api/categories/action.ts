@@ -1,8 +1,9 @@
 "use server"
 
+import { UpdateCategoryRequest } from '@/app/(main)/categories/[id]/update-category-form';
 import { CreateCategoryRequest } from '@/app/(main)/categories/create/create-category-form';
 import { fetchAuthenticated } from '@/app/api/auth/action';
-import { Category, CategoryResponse, UpdateCategoryRequest } from '@/app/lib/categories/definitions';
+import { Category, CategoryResponse } from '@/app/lib/categories/definitions';
 import { buildFilterQuery, buildSortQuery } from '@/app/lib/utils';
 import { URLSearchParams } from 'url';
 
