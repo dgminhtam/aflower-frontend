@@ -6,20 +6,19 @@ import { createProduct } from "@/app/api/products/action"
 import { Category } from "@/app/lib/categories/definitions"
 import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils"
 import { Combobox } from "@/components/combobox"
+import { ProductGallery } from "@/components/gallery-upload"
 import { ImageUpload } from "@/components/image-upload"
 import { MultiSelectCombobox } from "@/components/multiple-select-combobox"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@workspace/ui/components/button"
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@workspace/ui/components/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
+import { Separator } from "@workspace/ui/components/separator"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { X } from "lucide-react"
 import { Controller, useFieldArray, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
-import { Separator } from "@workspace/ui/components/separator"
-import { ProductGallery } from "@/components/gallery-upload"
 
 export const STATUS_VALUES = ["PUBLISHED", "DRAFT"] as const;
 export const createProductSchema = z.object({
@@ -50,14 +49,10 @@ export const createProductSchema = z.object({
   categoryIds: z.array(z.number())
     .min(1, "Mô tả không được để trống"),
   imageId: z.number()
-    .optional(),
+    .nullable(),
   gallery: z
-    .array(
-      z.object({
-        mediaId: z.number().nullable(),
-      })
-    )
-    .optional()
+    .array(z.number())
+    .optional(),
 });
 
 export type CreateProductRequest = z.infer<typeof createProductSchema>;
@@ -341,10 +336,14 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="form-rhf-sku">
+            <FieldLabel htmlFor="imageId">
               Ảnh chính
             </FieldLabel>
             <ImageUpload
+              {...field}
+              value={field.value}
+              initialMedia={null}
+              onChange={field.onChange}
             />
             {fieldState.invalid && (
               <FieldError errors={[fieldState.error]} />
@@ -352,9 +351,26 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
           </Field>
         )}
       />
-      <ProductGallery 
-        onMediaIdsChange={(ids) => console.log("Media IDs:", ids)}
+      <Controller
+        name="gallery" // Tên trường trong schema form của bạn
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="gallery">
+              Product Gallery <span className="text-destructive">*</span>
+            </FieldLabel>
+            <ProductGallery
+              {...field}
+              initialMedias={[]}
+            />
+
+            {fieldState.invalid && (
+              <FieldError errors={[fieldState.error]} />
+            )}
+          </Field>
+        )}
       />
+
       <Separator />
       <div>
         <Button disabled={form.formState.isSubmitting} type="submit">
