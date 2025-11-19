@@ -97,10 +97,6 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
     }
   }, [nameValue, form.setValue])
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "gallery",
-  })
   async function onSubmit(createProductRequest: CreateProductRequest) {
     console.log(createProductRequest.name);
     try {

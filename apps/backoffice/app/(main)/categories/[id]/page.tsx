@@ -1,6 +1,8 @@
 
+import { getCategoryById, getCategoryTree } from "@/app/api/categories/action";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle
@@ -8,7 +10,7 @@ import {
 import { Separator } from "@workspace/ui/components/separator";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Suspense } from "react";
-import FetchData from "./fetch-data";
+import UpdateCategoryForm from "./update-category-form";
 
 interface UpdateCategoryPageProps {
   params: Promise<{
@@ -30,5 +32,32 @@ export default async function Page({ params }: UpdateCategoryPageProps) {
         <FetchData id={categoryId} />
       </Suspense>
     </Card>
+  );
+}
+
+interface FetchDataCategoryPageProps {
+  id: number
+}
+
+async function FetchData({ id }: FetchDataCategoryPageProps) {
+  const [category, categories] = await Promise.all([
+    getCategoryById(id),
+    getCategoryTree()
+  ]);
+  return (
+    <CardContent>
+      <UpdateCategoryForm
+        categoryId={id}
+        initialData={{
+          name: category.name,
+          description: category.description || "",
+          slug: category.slug || "",
+          image: category.image,
+          active: category.active !== false,
+          parentId: category.parentId,
+        }}
+        categories={categories}
+      />
+    </CardContent>
   );
 }
