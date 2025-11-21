@@ -38,7 +38,7 @@ async function FetchDataForm() {
   const categoryTree = await getCategoryTree();
   
   return (
-    <CardContent className="pt-6">
+    <CardContent>
       <CreateProductForm categories={categoryTree}/>
     </CardContent>
   );
@@ -47,7 +47,7 @@ async function FetchDataForm() {
 // --- Component Skeleton (Mô phỏng Form Sản phẩm) ---
 function CreateProductSkeleton() {
   return (
-    <CardContent className="space-y-8 pt-6">
+    <CardContent className="space-y-8">
       {/* Row 1: Tên & SKU */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">

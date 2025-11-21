@@ -1,3 +1,4 @@
+import { UpdateProductRequest } from '@/app/(main)/products/[id]/update-product-form';
 import { CreateProductRequest } from '@/app/(main)/products/create/create-product-form';
 import { fetchAuthenticated } from '@/app/api/auth/action';
 import { SearchParams } from '@/app/lib/definitions';
@@ -11,6 +12,14 @@ export const getProductById = (id: number) =>
   fetchAuthenticated<Product>(`/products/${id}`);
 
 export const createProduct = (request: CreateProductRequest): Promise<Product> => fetchAuthenticated<Product>("/products", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(request),
+});
+
+export const updateProduct = (id: number, request: UpdateProductRequest): Promise<Product> => fetchAuthenticated<Product>(`/products/${id}`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",

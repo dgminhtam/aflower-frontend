@@ -94,7 +94,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
   async function onSubmit(data: UpdateProductRequest) {
     try {
       // Gọi API Update (truyền thêm ID sản phẩm)
-      // await updateProduct(product.id, data) 
+      await updateProduct(product.id, data);
       console.log("Updating:", { id: product.id, ...data });
       
       // Giả lập delay
@@ -302,7 +302,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
             <ProductGallery
               value={field.value}
               onChange={field.onChange}
-              initialMedias={product.gallery}
+              initialMedias={product.gallery ? product.gallery : []}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>

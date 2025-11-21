@@ -70,7 +70,7 @@ async function apiFetch<T>(
   }
 }
 
-async function getClerkToken(): Promise<string> {
+export async function getClerkToken(): Promise<string> {
   const { getToken, userId } = await auth();
   if (!userId) {
     throw new Error('Chưa xác thực (User ID not found)');
