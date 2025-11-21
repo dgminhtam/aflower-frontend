@@ -12,7 +12,6 @@ import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-gr
 import {
   Edit2,
   Grid,
-  Grid3x3,
   List,
   Plus,
   Trash2,
@@ -117,7 +116,11 @@ export function ProductListPage({ productPage, categories }: ProductListProps) {
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        <Badge variant={"outline"}>{product.category?.name}</Badge>
+                        {product.categories?.map((category, index) => (
+                          <Badge key={category.id || index} variant="outline">
+                            {category.name}
+                          </Badge>
+                        ))}
                       </TableCell>
                       <TableCell className="text-right text-foreground font-semibold">
                         {formatCurrency(product.price)}

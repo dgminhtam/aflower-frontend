@@ -6,6 +6,7 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput, // Đã thêm
   CommandItem,
   CommandList,
   CommandSeparator,
@@ -36,6 +37,7 @@ interface MultiSelectComboboxBaseProps {
   placeholder?: string
   disabled?: boolean
   error?: string
+  className?: string // Thêm className để custom width từ ngoài
 }
 
 interface MultiSelectComboboxSingleProps extends MultiSelectComboboxBaseProps {
@@ -54,14 +56,36 @@ export type MultiSelectComboboxProps =
   | MultiSelectComboboxSingleProps
   | MultiSelectComboboxMultipleProps
 
-export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
+// Hàm helper để lọc cây (Quan trọng)
+// Giữ lại node nếu bản thân nó khớp OR con cái nó khớp
+const filterTree = (nodes: MultiSelectOption[], term: string): MultiSelectOption[] => {
+  if (!term) return nodes
+  
+  return nodes
+    .map((node) => {
+      const matchesSelf = node.label.toLowerCase().includes(term.toLowerCase())
+      const filteredChildren = node.children ? filterTree(node.children, term) : []
+      
+      // Nếu bản thân khớp, giữ lại toàn bộ con (hoặc tùy logic bạn muốn)
+      // Ở đây tôi giữ logic: Nếu khớp cha thì hiện cha + con đã lọc. 
+      // Nếu cha không khớp nhưng có con khớp -> Vẫn hiện cha (để chứa con)
+      if (matchesSelf || filteredChildren.length > 0) {
+        return { ...node, children: filteredChildren }
+      }
+      return null
+    })
+    .filter((node) => node !== null) as MultiSelectOption[]
+}
 
-  const { options, error, placeholder = 'Select items...', disabled = false } = props
+export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
+  const { options, error, placeholder = 'Select items...', disabled = false, className } = props
 
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set())
   const [open, setOpen] = useState(false)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('') // State cho search
 
+  // Sync props to state
   useEffect(() => {
     if (props.mode === 'multiple') {
       setSelectedSet(new Set(props.value || []))
@@ -70,12 +94,43 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
     }
   }, [props.value, props.mode])
 
+  // Expand cha tự động khi search
+  useEffect(() => {
+    if (searchTerm) {
+      const getAllIds = (nodes: MultiSelectOption[]): string[] => {
+         return nodes.reduce((acc, node) => {
+             const childIds = node.children ? getAllIds(node.children) : []
+             return [...acc, node.value, ...childIds]
+         }, [] as string[])
+      }
+      // Khi đang search thì mở hết tree để user thấy kết quả
+      setExpandedNodes(new Set(getAllIds(options)))
+    } else {
+        setExpandedNodes(new Set())
+    }
+  }, [searchTerm, options])
+
+  // Lọc options dựa trên search term
+  const filteredOptions = useMemo(() => filterTree(options, searchTerm), [options, searchTerm])
+
   const handleSelect = useCallback(
     (optionValue: string) => {
       if (props.mode === 'single') {
-        setSelectedSet(new Set([optionValue]))
-        props.onChange(optionValue)
-        setOpen(false)
+        // Nếu chọn lại cái đã chọn thì bỏ chọn (toggle) hoặc giữ nguyên tùy requirement
+        // Ở đây tôi làm logic: Chọn cái mới -> thay thế. Chọn cái cũ -> giữ nguyên.
+        const newValue = selectedSet.has(optionValue) ? null : optionValue
+        // const newValue = optionValue // Hoặc dùng dòng này nếu bắt buộc phải chọn
+        
+        if(newValue) {
+             setSelectedSet(new Set([newValue]))
+             props.onChange(newValue)
+             setOpen(false)
+        } else {
+            // Logic bỏ chọn cho single mode (optional)
+             setSelectedSet(new Set())
+             props.onChange(null)
+        }
+        
       } else if (props.mode === 'multiple') {
         const newSet = new Set(selectedSet)
         if (newSet.has(optionValue)) {
@@ -116,7 +171,8 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
     [selectedSet, props.mode, props.onChange]
   )
 
-  const selectedOptions = useMemo(() => {
+  // Flatten options to find labels efficiently is better, but recursion works for small sets
+  const selectedOptionsDisplay = useMemo(() => {
     const selected: { value: string; label: string }[] = []
     const findSelected = (opts: MultiSelectOption[]) => {
       for (const opt of opts) {
@@ -132,141 +188,107 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
     return selected
   }, [options, selectedSet])
 
-  const triggerDisplay = useMemo(() => {
-    const count = selectedOptions.length
-
-    if (count === 0) {
-      return <span className="text-muted-foreground">{placeholder}</span>
-    }
-
-    // Dùng props.mode
-    if (props.mode === 'single') {
-      const { value, label } = selectedOptions[0]!
-      return (
-        <Badge variant={'outline'}>
-          {label}
-          {label && (
-            <span
-              onClick={(e) => {
-                e.stopPropagation()
-                handleRemoveValue(value)
-              }}
-              className="hover:opacity-70 transition-opacity"
-              aria-label={`Remove ${label}`}
-            >
-              <X className="h-4 w-4" />
-            </span>
-          )}
-        </Badge>
-      )
-    }
-
-    if (count <= 3) {
-      return (
-        <div className="flex flex-wrap gap-1">
-          {selectedOptions.map(({ value, label }) => (
-            <Badge
-              key={value}
-              variant="secondary"
-              className="text-xs pr-1 flex items-center gap-1"
-            >
-              {label}
-              <span
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemoveValue(value)
-                }}
-                className="hover:opacity-70 transition-opacity"
-                aria-label={`Remove ${label}`}
-              >
-                <X className="h-3 w-3" />
-              </span>
-            </Badge>
-          ))}
-        </div>
-      )
-    }
-
-    return (
-      <div className="flex flex-wrap gap-1">
-        {selectedOptions.slice(0, 2).map(({ value, label }) => (
-          <Badge
-            key={value}
-            className="text-xs pr-1 flex items-center gap-1"
-            variant={'outline'}
-          >
-            {label}
-            <span
-              onClick={(e) => {
-                e.stopPropagation()
-                handleRemoveValue(value)
-              }}
-              className="hover:opacity-70 transition-opacity"
-              aria-label={`Remove ${label}`}
-            >
-              <X className="h-3 w-3" />
-            </span>
-          </Badge>
-        ))}
-        <Badge variant="outline" className="text-xs">
-          +{count - 2}
-        </Badge>
-      </div>
-    )
-  }, [selectedOptions, placeholder, props.mode, handleRemoveValue])
-
   const renderTreeItems = (opts: MultiSelectOption[], depth = 0) => {
-    return opts.map((option) => (
-      <div key={option.value}>
-        <div className="flex items-center">
-          {option.children && option.children.length > 0 ? (
-            <Button
-              variant={"ghost"}
-              size={"icon-sm"}
-              onClick={(e) => {
-                e.stopPropagation()
-                setExpandedNodes((prev) => {
-                  const newSet = new Set(prev)
-                  if (newSet.has(option.value)) {
-                    newSet.delete(option.value)
-                  } else {
-                    newSet.add(option.value)
-                  }
-                  return newSet
-                })
-              }}
-              className="mr-1 p-0.5 hover:bg-accent rounded"
-            >
-              {expandedNodes.has(option.value) ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          ) : (
-            <div className="w-6 shrink-0" />
-          )}
-          <CommandItem
-            value={option.value}
-            onSelect={() => handleSelect(option.value)}
-            className="flex-1 flex items-center justify-between"
-          >
-            <span>{option.label}</span>
-            <Check
-              className={cn(
-                'h-4 w-4 shrink-0',
-                selectedSet.has(option.value) ? 'opacity-100' : 'opacity-0'
-              )}
-            />
-          </CommandItem>
+    if (opts.length === 0) return null
+
+    return opts.map((option) => {
+        const isExpanded = expandedNodes.has(option.value)
+        const hasChildren = option.children && option.children.length > 0
+        
+        return (
+            <div key={option.value}>
+                <div className="flex items-center group">
+                {/* Nút Expand tách riêng */}
+                {hasChildren ? (
+                    <div 
+                    className="p-2 cursor-pointer hover:text-primary"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault() // Ngăn focus nhảy lung tung
+                        setExpandedNodes((prev) => {
+                            const newSet = new Set(prev)
+                            if (newSet.has(option.value)) newSet.delete(option.value)
+                            else newSet.add(option.value)
+                            return newSet
+                        })
+                    }}
+                    >
+                    {isExpanded ? (
+                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    ) : (
+                        <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                    )}
+                    </div>
+                ) : (
+                    <div className="w-7 shrink-0" /> 
+                )}
+
+                {/* CommandItem chỉ dùng để Select */}
+                <CommandItem
+                    value={option.label} // Hack: Dùng label làm value để cmdk search mặc định hoạt động nếu muốn, nhưng ở đây ta đã manual filter
+                    onSelect={() => handleSelect(option.value)}
+                    className="flex-1 flex items-center justify-between cursor-pointer aria-selected:bg-accent"
+                >
+                    <span className={cn("truncate", depth > 0 && !hasChildren && "text-muted-foreground")}>
+                        {option.label}
+                    </span>
+                    <Check
+                    className={cn(
+                        'h-4 w-4 shrink-0 ml-2',
+                        selectedSet.has(option.value) ? 'opacity-100' : 'opacity-0'
+                    )}
+                    />
+                </CommandItem>
+                </div>
+                
+                {/* Render con đệ quy */}
+                {hasChildren && isExpanded && (
+                <div className="ml-4 border-l border-border/50 pl-1">
+                    {renderTreeItems(option.children!, depth + 1)}
+                </div>
+                )}
+            </div>
+        )
+    })
+  }
+
+  // Trigger UI Logic
+  const renderTriggerContent = () => {
+    if (selectedSet.size === 0) {
+        return <span className="text-muted-foreground truncate">{placeholder}</span>
+    }
+
+    if (props.mode === 'single') {
+        const selectedItem = selectedOptionsDisplay[0]
+        return <span className="truncate">{selectedItem?.label || props.value}</span>
+    }
+
+    // Multiple mode UI
+    return (
+        <div className="flex flex-wrap gap-1">
+            {selectedOptionsDisplay.slice(0, 2).map((item) => (
+                <Badge key={item.value} variant="secondary" className="rounded-sm px-1 font-normal">
+                    {item.label}
+                    <span
+                        role="button"
+                        className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        onMouseDown={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                        }}
+                        onClick={() => handleRemoveValue(item.value)}
+                    >
+                        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                    </span>
+                </Badge>
+            ))}
+            {selectedSet.size > 2 && (
+                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                    +{selectedSet.size - 2} more
+                </Badge>
+            )}
         </div>
-        {option.children && expandedNodes.has(option.value) && (
-          <div className="ml-2 border-l border-border">
-            {renderTreeItems(option.children, depth + 1)}
-          </div>
-        )}
-      </div>
-    ))
+    )
   }
 
   return (
@@ -277,25 +299,37 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
           role="combobox"
           aria-expanded={open}
           className={cn(
-            'min-w-sm justify-between',
-            error && 'border-destructive focus-visible:ring-destructive'
+            'w-full justify-between h-auto min-h-10 py-2 px-3',
+            error && 'border-destructive focus-visible:ring-destructive',
+            className
           )}
           disabled={disabled}
         >
-          {triggerDisplay}
+          <div className="flex flex-1 flex-wrap items-center gap-1 text-left">
+             {renderTriggerContent()}
+          </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="min-w-sm p-0" align="start">
-        <Command>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command shouldFilter={false}> {/* Tắt filter mặc định của cmdk */}
+          <CommandInput 
+            placeholder="Search items..." 
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
           <CommandEmpty>No item found.</CommandEmpty>
-          <CommandList>
-            <CommandGroup>{renderTreeItems(options)}</CommandGroup>
+          <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
+            <CommandGroup>
+                {renderTreeItems(filteredOptions)}
+            </CommandGroup>
+            
             <CommandSeparator />
+            
             {selectedSet.size > 0 && (
               <CommandGroup>
-                <CommandItem onSelect={handleClear} className="text-muted-foreground">
-                  Clear selection ({selectedSet.size})
+                <CommandItem onSelect={handleClear} className="justify-center text-center cursor-pointer">
+                  Clear selection
                 </CommandItem>
               </CommandGroup>
             )}

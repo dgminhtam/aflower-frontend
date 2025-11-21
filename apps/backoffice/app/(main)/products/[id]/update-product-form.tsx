@@ -1,278 +1,332 @@
 "use client"
 
-import type React from "react"
+import React, { useEffect } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { toast } from "sonner"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Save, Plus, X } from "lucide-react"
-import Image from "next/image"
+// Import UI & Actions
 import { Button } from "@workspace/ui/components/button"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
-import { Textarea } from "@workspace/ui/components/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
-import { Product } from "@/app/lib/products/definitions"
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
+import { Separator } from "@workspace/ui/components/separator"
+import { Spinner } from "@workspace/ui/components/spinner"
+import { Combobox } from "@/components/combobox"
+import { MultiSelectCombobox } from "@/components/multiple-select-combobox"
+import { ImageUpload } from "@/components/image-upload"
+import { ProductGallery } from "@/components/gallery-upload"
 
-interface EditProductFormProps {
-  product: Product | null
-  isNew?: boolean
+// Import Defs
+import { Category } from "@/app/lib/categories/definitions"
+import { Product, STATUS_VALUES } from "@/app/lib/products/definitions"
+import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils"
+import { updateProduct } from "@/app/api/products/action" // Giả định bạn có hàm này
+
+// --- SCHEMA ---
+// Với Update, đôi khi ta không bắt buộc validation chặt như Create, nhưng giữ nguyên cũng tốt.
+export const updateProductSchema = z.object({
+  name: z.string().min(1, "Tên không được để trống").max(255),
+  sku: z.string().min(1, "SKU không được để trống").max(255),
+  slug: z.string().min(1, "Slug không được để trống").max(255) // Tăng max lên, 50 hơi ngắn cho SEO
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug không hợp lệ (chỉ chứa chữ thường, số, gạch ngang)"),
+  description: z.string().min(1, "Mô tả không được để trống").max(2000), // Tăng max mô tả lên
+  price: z.number().optional(),
+  originPrice: z.number().optional(),
+  status: z.enum(STATUS_VALUES),
+  categoryIds: z.array(z.number()).min(1, "Chọn ít nhất 1 danh mục"),
+  imageId: z.number().nullable(), // Cho phép null nếu xóa ảnh
+  gallery: z.array(z.number()).optional(),
+});
+
+export type UpdateProductRequest = z.infer<typeof updateProductSchema>;
+
+const statuses = [
+  { value: "PUBLISHED", label: "Xuất bản" },
+  { value: "DRAFT", label: "Nháp" }
+]
+
+interface UpdateProductFormProps {
+  categories: Category[];
+  product: Product;
 }
 
-const CATEGORIES = ["Electronics", "Furniture", "Accessories"]
-const STATUSES = ["active", "inactive", "draft"]
+export function UpdateProductForm({ categories, product }: UpdateProductFormProps) {
+  const categoryOptions = convertCategoriesToMultiSelectOptions(categories);
 
-export function EditProductForm({ product, isNew = false }: EditProductFormProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState<Product>(product)
+  const form = useForm<UpdateProductRequest>({
+    resolver: zodResolver(updateProductSchema),
+    // Dùng defaultValues an toàn với toán tử ?. và ??
+    defaultValues: {
+      name: product.name,
+      sku: product.sku,
+      slug: product.slug,
+      description: product.description || "",
+      price: product.price,
+      originPrice: product.originPrice,
+      status: product.status as typeof STATUS_VALUES[number],
+      categoryIds: product.categories?.map((c) => c.id) || [],
+      imageId: product.image?.id ?? null, // FIX: Tránh crash nếu product chưa có ảnh
+      gallery: product.gallery?.map((c) => c.id) || [],
+    },
+  })
 
-  const handleChange = (field: keyof Product, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: field === "price" || field === "originPrice" ? Number.parseFloat(value) : value,
-    }))
-  }
+  // --- XỬ LÝ SLUG ---
+  const nameValue = form.watch("name")
+  const slugValue = form.watch("slug")
 
-  const handleAddGalleryImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      gallery: [...(prev.gallery || []), ""],
-    }))
-  }
+  useEffect(() => {
+    // Logic: Chỉ auto-generate slug khi slug đang TRỐNG.
+    // Không đổi slug khi đang edit tên sản phẩm cũ để bảo vệ SEO.
+    if (nameValue && !slugValue) {
+      const generatedSlug = nameValue
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Bỏ dấu tiếng Việt
+        .replace(/đ/g, "d").replace(/Đ/g, "D") // Xử lý chữ đ
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]/g, "")
+      form.setValue("slug", generatedSlug, { shouldValidate: true })
+    }
+  }, [nameValue, slugValue, form.setValue])
 
-  const handleGalleryImageChange = (index: number, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      gallery: prev.gallery?.map((img, i) => (i === index ? value : img)) || [],
-    }))
-  }
+  // --- SUBMIT ---
+  async function onSubmit(data: UpdateProductRequest) {
+    try {
+      // Gọi API Update (truyền thêm ID sản phẩm)
+      // await updateProduct(product.id, data) 
+      console.log("Updating:", { id: product.id, ...data });
+      
+      // Giả lập delay
+      await new Promise(r => setTimeout(r, 1000));
 
-  const handleRemoveGalleryImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      gallery: prev.gallery?.filter((_, i) => i !== index) || [],
-    }))
-  }
+      toast.success("Cập nhật sản phẩm thành công")
+      
+      // KHÔNG reset form về rỗng ở trang Update.
+      // Cập nhật lại defaultValues để nút "Reset" (nếu có) hoạt động đúng với dữ liệu mới
+      form.reset(data); 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    setIsLoading(false)
-    router.push("/")
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("Đã có lỗi xảy ra.")
+      }
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-        <h2 className="font-semibold text-foreground mb-6">Product Details</h2>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      
+      {/* Tên & SKU */}
+      <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Controller
+          name="name"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="name">Tên sản phẩm <span className="text-destructive">*</span></FieldLabel>
+              <Input {...field} id="name" placeholder="Nhập tên sản phẩm" />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+        <Controller
+          name="sku"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="sku">SKU <span className="text-destructive">*</span></FieldLabel>
+              <Input {...field} id="sku" placeholder="Mã SKU" />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      </FieldGroup>
 
-        <div className="space-y-6">
-          {/* Product Name */}
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">Product Name *</label>
-            <Input
-              type="text"
-              placeholder="Enter product name"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              className="border-border"
-              required
-            />
-          </div>
+      {/* Slug */}
+      <Controller
+        name="slug"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="slug">URL Slug <span className="text-destructive">*</span></FieldLabel>
+            <Input {...field} id="slug" placeholder="duong-dan-san-pham" />
+            <p className="text-xs text-muted-foreground mt-1">Thay đổi slug sẽ ảnh hưởng đến SEO và liên kết cũ.</p>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
 
-          {/* Category and Status Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Category *</label>
-              <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
-                <SelectTrigger className="border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Mô tả */}
+      <Controller
+        name="description"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="description">Mô tả</FieldLabel>
+            <InputGroup>
+              <InputGroupTextarea
+                {...field}
+                id="description"
+                rows={6}
+                className="min-h-24 resize-none"
+              />
+              <InputGroupAddon align="block-end">
+                <InputGroupText className="tabular-nums text-xs">
+                  {field.value?.length || 0} ký tự
+                </InputGroupText>
+              </InputGroupAddon>
+            </InputGroup>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
 
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Status *</label>
-              <Select value={formData.status} onValueChange={(value) => handleChange("status", value as any)}>
-                <SelectTrigger className="border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((status) => (
-                    <SelectItem key={status} value={status} className="capitalize">
-                      <span className="capitalize">{status}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {/* Danh mục & Trạng thái */}
+      <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Controller
+          name="categoryIds"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Danh mục</FieldLabel>
+              <MultiSelectCombobox
+                {...field}
+                mode="multiple"
+                options={categoryOptions}
+                value={(field.value || []).map(String)}
+                onChange={(val) => field.onChange(val.map(Number))}
+                placeholder="Chọn danh mục..."
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+        <Controller
+          name="status"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Trạng thái <span className="text-destructive">*</span></FieldLabel>
+              <Combobox
+                {...field}
+                options={statuses}
+                label="Chọn trạng thái"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      </FieldGroup>
 
-          {/* SKU */}
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">SKU *</label>
-            <Input
-              type="text"
-              placeholder="Enter product SKU"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              className="border-border"
-              required
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">Description</label>
-            <Textarea
-              placeholder="Enter product description"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              className="border-border min-h-24 resize-none"
-            />
-          </div>
-
-          {/* Price and Origin Price Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Price *</label>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
-                <Input
+      {/* Giá bán & Giá gốc */}
+      <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Giá Bán (Price) */}
+        <Controller
+          name="price"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="price">Giá bán</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
                   type="number"
-                  placeholder="0.00"
-                  value={formData.price || ""}
-                  onChange={(e) => handleChange("price", e.target.value)}
-                  step="0.01"
-                  min="0"
-                  className="border-border"
-                  required
+                  {...field}
+                  id="price"
+                  placeholder="0"
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                 />
-              </div>
-            </div>
+                <InputGroupAddon align="inline-end">
+                  <InputGroupText>VND</InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Origin Price</label>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
-                <Input
+        {/* Giá Gốc (Origin Price) */}
+        <Controller
+          name="originPrice"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="origin-price">Giá niêm yết (Gốc)</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
                   type="number"
-                  placeholder="0.00"
-                  value={formData.originPrice || ""}
-                  onChange={(e) => handleChange("originPrice", e.target.value)}
-                  step="0.01"
-                  min="0"
-                  className="border-border"
+                  {...field}
+                  id="origin-price"
+                  placeholder="0"
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                 />
-              </div>
-            </div>
-          </div>
+                <InputGroupAddon align="inline-end">
+                  <InputGroupText>VND</InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      </FieldGroup>
 
-          <div className="border-t border-border pt-6">
-            <h3 className="font-semibold text-foreground mb-4">Product Images</h3>
-            <div className="space-y-6">
-              {/* Main Product Image */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-3 block">Main Product Image *</label>
-                <div className="flex flex-col gap-4">
-                  <div className="relative h-64 w-full bg-muted rounded-lg overflow-hidden">
-                    <Image
-                      src={formData.image || "/placeholder.svg"}
-                      alt="Product preview"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Image URL"
-                    value={formData.image}
-                    onChange={(e) => handleChange("image", e.target.value)}
-                    className="border-border"
-                    required
-                  />
-                </div>
-              </div>
+      {/* Ảnh đại diện */}
+      <Controller
+        name="imageId"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel>Ảnh đại diện</FieldLabel>
+            <ImageUpload
+              value={field.value} // Chỉ truyền ID
+              // Cần xử lý hiển thị ảnh cũ nếu field.value == initial.id
+              // Hoặc component ImageUpload của bạn tự handle việc hiển thị dựa trên initialMedia
+              initialMedia={product.image} 
+              onChange={field.onChange}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
 
-              {/* Gallery Images */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-3 block">Image Gallery</label>
-                <div className="space-y-3 mb-4">
-                  {formData.gallery && formData.gallery.length > 0 ? (
-                    formData.gallery.map((galleryImage, index) => (
-                      <div key={index} className="flex gap-3">
-                        <div className="relative h-20 w-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                          <Image
-                            src={galleryImage || "/placeholder.svg"}
-                            alt={`Gallery ${index}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 flex flex-col gap-2">
-                          <Input
-                            type="text"
-                            placeholder={`Gallery image URL ${index + 1}`}
-                            value={galleryImage}
-                            onChange={(e) => handleGalleryImageChange(index, e.target.value)}
-                            className="border-border"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveGalleryImage(index)}
-                            className="w-fit gap-2 border-border"
-                          >
-                            <X className="h-4 w-4" />
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No gallery images added yet</p>
-                  )}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAddGalleryImage}
-                  className="w-full gap-2 border-border border-dashed bg-transparent"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Gallery Image
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Thư viện ảnh (Đã tối ưu) */}
+      <Controller
+        name="gallery"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel>Thư viện ảnh</FieldLabel>
+            <ProductGallery
+              value={field.value}
+              onChange={field.onChange}
+              initialMedias={product.gallery}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
 
-      {/* Form Actions */}
-      <div className="flex gap-3">
-        <Link href="/" className="flex-1">
-          <Button variant="outline" className="w-full border-border bg-transparent">
-            Cancel
-          </Button>
-        </Link>
-        <Button
-          type="submit"
-          disabled={isLoading || !formData.name}
-          className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+      <Separator />
+
+      <div className="flex gap-4">
+        <Button disabled={form.formState.isSubmitting} type="submit">
+          {form.formState.isSubmitting ? (
+            <><Spinner className="mr-2" /> Đang lưu...</>
+          ) : "Lưu thay đổi"}
+        </Button>
+        
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={() => window.history.back()} // Nút hủy quay lại trang trước
         >
-          <Save className="h-4 w-4" />
-          {isLoading ? "Saving..." : "Save Product"}
+          Quay lại
         </Button>
       </div>
+
     </form>
   )
 }

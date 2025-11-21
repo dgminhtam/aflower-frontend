@@ -2,16 +2,18 @@ import { Category } from "../categories/definitions";
 import { Root } from "../definitions";
 import { Media } from "../media/definitions";
 
+export const STATUS_VALUES = ["PUBLISHED", "DRAFT"] as const;
 export interface Product {
   id: number;
   sku: string;
   name: string;
+  slug: string;
   description: string;
   price: number;
   originPrice: number;
-  category: Category;
+  categories: Category[];
   image: Media;
-  status: string;
+  status: typeof STATUS_VALUES[number];
   gallery: Media[];
 }
 

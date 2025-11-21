@@ -3,10 +3,10 @@
 import { uploadMedia } from "@/app/api/medias/action"
 import { Media } from "@/app/lib/media/definitions"
 import { Button } from "@workspace/ui/components/button"
-import { Loader2, Upload, X, GripVertical, Trash2 } from 'lucide-react'
+import { GripVertical, Loader2, Trash2, Upload, X } from 'lucide-react'
 import Image from "next/image"
 import type React from "react"
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -14,33 +14,47 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
 const MAX_IMAGES = 10
 
 interface ProductGalleryProps {
-    value: number[]
+    value?: number[] // Có thể optional nếu chỉ dùng initialMedias
     onChange: (mediaIds: number[]) => void
     onBlur?: () => void;
     disabled?: boolean;
-    initialMedias: Media[]
+    initialMedias?: Media[] // Optional
 }
 
-export function ProductGallery({ value, onChange,onBlur,disabled, initialMedias = [] }: ProductGalleryProps) {
+export function ProductGallery({ 
+    value, 
+    onChange, 
+    onBlur, 
+    disabled, 
+    initialMedias = [] 
+}: ProductGalleryProps) {
+    // State
     const [uploadedMedia, setUploadedMedia] = useState<Media[]>(initialMedias)
     const [isLoading, setIsLoading] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
     const [draggedId, setDraggedId] = useState<number | null>(null)
+    
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const handleMediaIdsChange = (newMedia: Media[]) => {
+    // 1. Sync initialMedias nếu props thay đổi (quan trọng để load data async)
+    useEffect(() => {
+        if (initialMedias && initialMedias.length > 0) {
+             // Chỉ update nếu độ dài khác nhau để tránh loop, hoặc so sánh sâu hơn nếu cần
+            if (initialMedias.length !== uploadedMedia.length || initialMedias[0]?.id !== uploadedMedia[0]?.id) {
+                setUploadedMedia(initialMedias);
+            }
+        }
+    }, [initialMedias]);
+
+    const updateParent = (newMedia: Media[]) => {
         setUploadedMedia(newMedia)
         onChange(newMedia.map((m) => m.id))
     }
 
     const validateFile = (file: File) => {
-        if (file.size > MAX_FILE_SIZE) {
-            return "File is too large. Maximum size is 5MB."
-        }
-        if (!ALLOWED_TYPES.includes(file.type)) {
-            return "Invalid file type. Only PNG, JPG, and WEBP are accepted."
-        }
+        if (file.size > MAX_FILE_SIZE) return "File is too large. Maximum size is 5MB."
+        if (!ALLOWED_TYPES.includes(file.type)) return "Invalid file type. Only PNG, JPG, and WEBP are accepted."
         return null
     }
 
@@ -58,132 +72,134 @@ export function ProductGallery({ value, onChange,onBlur,disabled, initialMedias 
         setIsLoading(true)
 
         try {
+            // Dùng Promise.allSettled để không chặn các file hợp lệ nếu có 1 file lỗi
             const uploadPromises = files.map(async (file) => {
-                const validationError = validateFile(file)
-                if (validationError) {
-                    toast.error("Invalid file", { description: validationError })
-                    return null // Bỏ qua file lỗi
-                }
+                const error = validateFile(file)
+                if (error) throw new Error(error)
 
-                try {
-                    const formData = new FormData()
-                    formData.append("file", file)
-                    const media: Media = await uploadMedia(formData)
-                    return media
-                } catch (err) {
-                    toast.error("Invalid file", { description: validationError })
-                    return null // Bỏ qua file lỗi
+                const formData = new FormData()
+                formData.append("file", file)
+                return await uploadMedia(formData)
+            })
+
+            const results = await Promise.allSettled(uploadPromises)
+            
+            const successfulUploads: Media[] = []
+            const errors: string[] = []
+
+            results.forEach((result) => {
+                if (result.status === 'fulfilled') {
+                    successfulUploads.push(result.value)
+                } else {
+                    errors.push(result.reason.message || "Upload failed")
                 }
             })
 
-            const uploadedItems = (await Promise.all(uploadPromises)).filter((item): item is Media => item !== null)
+            if (successfulUploads.length > 0) {
+                const newMedia = [...uploadedMedia, ...successfulUploads]
+                updateParent(newMedia)
+                toast.success(`Uploaded ${successfulUploads.length} image(s)`)
+            }
 
-            if (uploadedItems.length > 0) {
-                const newMedia = [...uploadedMedia, ...uploadedItems]
-                handleMediaIdsChange(newMedia)
-                toast.success("Upload successful!", {
-                    description: `${uploadedItems.length} image(s) have been uploaded.`,
+            if (errors.length > 0) {
+                toast.error(`${errors.length} file(s) failed to upload`, {
+                    description: errors[0] // Hiển thị lỗi đầu tiên
                 })
             }
+
+        } catch (err) {
+            toast.error("Something went wrong during upload")
         } finally {
             setIsLoading(false)
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ""
-            }
+            if (fileInputRef.current) fileInputRef.current.value = ""
         }
     }
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    // Drag & Drop Upload Handlers
+    const handleDragOver = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        setIsDragging(true)
-    }
+        if (!disabled) setIsDragging(true)
+    }, [disabled])
 
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(false)
-    }
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
         setIsDragging(false)
+    }, [])
 
-        const files = e.dataTransfer.files
-        if (files && files.length > 0) {
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(false)
+        if (disabled) return
+
+        const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith("image/"))
+        
+        if (files.length === 0) {
+             // Nếu drop text hoặc file không phải ảnh
+            return
+        }
+        
+        // Gán files vào input ref để tái sử dụng logic handleImageChange
+        if (fileInputRef.current) {
             const dataTransfer = new DataTransfer()
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]
-                if (file && file.type.startsWith("image/")) {
-                    dataTransfer.items.add(file)
-                }
-            }
-
-            if (dataTransfer.items.length === 0) {
-                toast.error("Invalid files", {
-                    description: "Please only drag and drop image files.",
-                })
-                return
-            }
-
-            fileInputRef.current!.files = dataTransfer.files
-            handleImageChange({
-                target: { files: dataTransfer.files },
-            } as React.ChangeEvent<HTMLInputElement>)
+            files.forEach(file => dataTransfer.items.add(file))
+            fileInputRef.current.files = dataTransfer.files
+            
+            // Trigger event giả
+            handleImageChange({ target: fileInputRef.current } as React.ChangeEvent<HTMLInputElement>)
         }
-    }
+    }, [disabled, uploadedMedia.length]) // Thêm dependencies cần thiết
 
+    // Actions
     const handleRemoveImage = (mediaId: number) => {
         const newMedia = uploadedMedia.filter((m) => m.id !== mediaId)
-        handleMediaIdsChange(newMedia)
-        setSelectedIds(prev => {
-            const updated = new Set(prev)
-            updated.delete(mediaId)
-            return updated
-        })
-        toast.success("Image removed")
+        updateParent(newMedia)
+        
+        if (selectedIds.has(mediaId)) {
+            const newSelected = new Set(selectedIds)
+            newSelected.delete(mediaId)
+            setSelectedIds(newSelected)
+        }
     }
 
     const handleBulkDelete = () => {
         const newMedia = uploadedMedia.filter((m) => !selectedIds.has(m.id))
-        handleMediaIdsChange(newMedia)
+        updateParent(newMedia)
         setSelectedIds(new Set())
-        toast.success(`${selectedIds.size} image(s) deleted`)
+        toast.success("Selected images deleted")
     }
 
     const toggleSelect = (mediaId: number) => {
         setSelectedIds(prev => {
             const updated = new Set(prev)
-            if (updated.has(mediaId)) {
-                updated.delete(mediaId)
-            } else {
-                updated.add(mediaId)
-            }
+            updated.has(mediaId) ? updated.delete(mediaId) : updated.add(mediaId)
             return updated
         })
     }
 
-    const handleDragStart = (e: React.DragEvent, mediaId: number) => {
-        setDraggedId(mediaId)
-        e.dataTransfer.effectAllowed = "move"
-    }
-
-    const handleDragOverImage = (e: React.DragEvent) => {
-        e.preventDefault()
-        e.dataTransfer.dropEffect = "move"
+    // Logic Sort (Reordering)
+    const handleDragStart = (e: React.DragEvent, id: number) => {
+        setDraggedId(id)
+        // Firefox cần cái này để drag hoạt động
+        e.dataTransfer.effectAllowed = "move" 
+        // Ẩn hình ảnh ghost mặc định nếu muốn custom (optional)
     }
 
     const handleDropImage = (targetId: number) => {
         if (!draggedId || draggedId === targetId) return
 
-        const draggedItem = uploadedMedia.find(m => m.id === draggedId)!
-        const newMedia = uploadedMedia.filter(m => m.id !== draggedId) // 1. Xóa phần tử cũ
+        const draggedIndex = uploadedMedia.findIndex(m => m.id === draggedId)
+        const targetIndex = uploadedMedia.findIndex(m => m.id === targetId)
 
-        const targetIndex = newMedia.findIndex(m => m.id === targetId)
-        newMedia.splice(targetIndex, 0, draggedItem) // 2. Chèn vào vị trí đích
+        if (draggedIndex === -1 || targetIndex === -1) return
 
-        handleMediaIdsChange(newMedia)
+        const newMedia = [...uploadedMedia]
+        const [reorderedItem] = newMedia.splice(draggedIndex, 1)
+        newMedia.splice(targetIndex, 0, reorderedItem)
+
+        updateParent(newMedia)
         setDraggedId(null)
     }
 
@@ -192,39 +208,43 @@ export function ProductGallery({ value, onChange,onBlur,disabled, initialMedias 
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="space-y-2">
                 <h2 className="text-lg font-semibold">Product Gallery</h2>
                 <p className="text-sm text-muted-foreground">
-                    Manage product images. You can upload up to {MAX_IMAGES} images total.
+                    Manage product images. ({uploadedMedia.length}/{MAX_IMAGES})
                 </p>
             </div>
 
-            {/* Upload Area */}
-            {canAddMore && (
+            {/* Upload Area - Added Accessibility */}
+            {canAddMore && !disabled && (
                 <div
                     onClick={() => !isLoading && fileInputRef.current?.click()}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                        }
+                    }}
+                    role="button"
+                    tabIndex={0}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    className={`cursor-pointer border-2 border-dashed rounded-lg p-8 transition-colors ${isDragging
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary hover:bg-muted/50"
-                        }`}
+                    className={`cursor-pointer border-2 border-dashed rounded-lg p-8 transition-colors outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                        isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary hover:bg-muted/50"
+                    } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="flex flex-col items-center gap-3">
                             <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-                            <p className="text-sm font-medium">Uploading...</p>
+                            <p className="text-sm">Uploading...</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="flex flex-col items-center gap-3">
                             <Upload className="w-8 h-8 text-muted-foreground" />
                             <div className="text-center">
-                                <p className="text-sm font-medium">
-                                    {isDragging ? "Drop images here" : "Drag & drop images here, or click to browse"}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, or WEBP (max 5MB each)</p>
+                                <p className="text-sm font-medium">Click or drag images here</p>
+                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP (max 5MB)</p>
                             </div>
                         </div>
                     )}
@@ -236,25 +256,19 @@ export function ProductGallery({ value, onChange,onBlur,disabled, initialMedias 
                 type="file"
                 accept={ALLOWED_TYPES.join(",")}
                 onChange={handleImageChange}
-                disabled={isLoading || !canAddMore}
+                disabled={isLoading || !canAddMore || disabled}
                 multiple
                 className="hidden"
             />
 
-            {/* Gallery Grid */}
+            {/* Gallery */}
             {uploadedMedia.length > 0 && (
                 <div className="space-y-4">
                     {selectedIds.size > 0 && (
-                        <div className="flex items-center justify-between p-4 bg-muted rounded-lg border">
-                            <p className="text-sm font-medium">{selectedIds.size} selected</p>
-                            <Button
-                                onClick={handleBulkDelete}
-                                variant="destructive"
-                                size="sm"
-                                className="gap-2"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Delete Selected
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                            <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                            <Button onClick={handleBulkDelete} variant="destructive" size="sm" className="gap-2 h-8">
+                                <Trash2 className="w-4 h-4" /> Delete Selected
                             </Button>
                         </div>
                     )}
@@ -263,59 +277,50 @@ export function ProductGallery({ value, onChange,onBlur,disabled, initialMedias 
                         {uploadedMedia.map((media) => (
                             <div
                                 key={media.id}
-                                draggable
+                                draggable={!disabled}
                                 onDragStart={(e) => handleDragStart(e, media.id)}
-                                onDragOver={handleDragOverImage}
+                                onDragOver={(e) => e.preventDefault()} // Cần thiết để cho phép drop
                                 onDrop={() => handleDropImage(media.id)}
-                                className={`relative group cursor-move rounded-md border overflow-hidden transition-all ${
-                                    selectedIds.has(media.id) ? 'ring-2 ring-primary border-primary' : 'border-input hover:border-primary'
-                                } ${draggedId === media.id ? 'opacity-50' : ''}`}
+                                className={`relative group aspect-square rounded-md border overflow-hidden bg-background transition-all
+                                    ${selectedIds.has(media.id) ? 'ring-2 ring-primary border-primary' : 'border-input hover:border-primary'}
+                                    ${draggedId === media.id ? 'opacity-40 scale-95' : 'opacity-100'}
+                                `}
                             >
-                                <div className="relative w-full aspect-square bg-muted">
-                                    <Image
-                                        src={media.urlMedium || "/placeholder.svg?height=150&width=150"}
-                                        alt="Gallery image"
-                                        className="w-full h-full object-cover"
-                                        width={150}
-                                        height={150}
-                                    />
-                                </div>
+                                <Image
+                                    src={media.urlMedium || "/placeholder.svg"}
+                                    alt="Product image"
+                                    fill // Dùng fill thay vì width/height cố định để responsive tốt hơn
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                                    className="object-cover"
+                                />
+                                
+                                {/* Overlay controls */}
+                                {!disabled && (
+                                    <>
+                                        <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center
+                                            ${selectedIds.has(media.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                            <GripVertical className="w-6 h-6 text-white/80 cursor-move" />
+                                        </div>
 
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                                    <GripVertical className="w-5 h-5 text-white" />
-                                </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); toggleSelect(media.id); }}
+                                            className="absolute top-2 left-2 w-6 h-6 rounded border border-white/50 bg-black/30 hover:bg-primary/80 flex items-center justify-center transition-colors"
+                                        >
+                                            {selectedIds.has(media.id) && <div className="w-3 h-3 bg-white rounded-[1px]" />}
+                                        </button>
 
-                                <button
-                                    onClick={() => toggleSelect(media.id)}
-                                    className="absolute top-2 left-2 w-5 h-5 rounded border-2 border-white bg-black/20 hover:bg-black/40 transition-colors flex items-center justify-center"
-                                >
-                                    {selectedIds.has(media.id) && (
-                                        <div className="w-3 h-3 bg-white rounded-sm"></div>
-                                    )}
-                                </button>
-
-                                <Button
-                                    onClick={() => handleRemoveImage(media.id)}
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-2 right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <X className="w-3 h-3" />
-                                </Button>
+                                        <Button
+                                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(media.id); }}
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute top-2 right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         ))}
-                    </div>
-
-                    {/* Status Messages */}
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div>
-                            {!canAddMore ? (
-                                <span className="font-medium">Maximum {MAX_IMAGES} images reached</span>
-                            ) : (
-                                <span>{remainingSlots} slot{remainingSlots > 1 ? "s" : ""} available</span>
-                            )}
-                        </div>
-                        <span>{uploadedMedia.length} of {MAX_IMAGES}</span>
                     </div>
                 </div>
             )}
