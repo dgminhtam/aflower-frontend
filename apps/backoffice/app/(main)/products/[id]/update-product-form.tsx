@@ -1,28 +1,28 @@
 "use client"
 
-import React, { useEffect } from "react"
-import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { useEffect } from "react"
+import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
+import * as z from "zod"
 
 // Import UI & Actions
+import { Combobox } from "@/components/combobox"
+import { ImageUpload } from "@/components/image-upload"
+import { MultiSelectCombobox } from "@/components/multiple-select-combobox"
 import { Button } from "@workspace/ui/components/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText, InputGroupTextarea } from "@workspace/ui/components/input-group"
 import { Separator } from "@workspace/ui/components/separator"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { Combobox } from "@/components/combobox"
-import { MultiSelectCombobox } from "@/components/multiple-select-combobox"
-import { ImageUpload } from "@/components/image-upload"
-import { ProductGallery } from "@/components/gallery-upload"
 
 // Import Defs
+import { updateProduct } from "@/app/api/products/action"; // Giả định bạn có hàm này
 import { Category } from "@/app/lib/categories/definitions"
 import { Product, STATUS_VALUES } from "@/app/lib/products/definitions"
 import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils"
-import { updateProduct } from "@/app/api/products/action" // Giả định bạn có hàm này
+import { GalleryUpload } from "@/components/gallery-upload"
 
 // --- SCHEMA ---
 // Với Update, đôi khi ta không bắt buộc validation chặt như Create, nhưng giữ nguyên cũng tốt.
@@ -96,15 +96,15 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
       // Gọi API Update (truyền thêm ID sản phẩm)
       await updateProduct(product.id, data);
       console.log("Updating:", { id: product.id, ...data });
-      
+
       // Giả lập delay
       await new Promise(r => setTimeout(r, 1000));
 
       toast.success("Cập nhật sản phẩm thành công")
-      
+
       // KHÔNG reset form về rỗng ở trang Update.
       // Cập nhật lại defaultValues để nút "Reset" (nếu có) hoạt động đúng với dữ liệu mới
-      form.reset(data); 
+      form.reset(data);
 
     } catch (error) {
       if (error instanceof Error) {
@@ -117,7 +117,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      
+
       {/* Tên & SKU */}
       <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Controller
@@ -284,7 +284,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
               value={field.value} // Chỉ truyền ID
               // Cần xử lý hiển thị ảnh cũ nếu field.value == initial.id
               // Hoặc component ImageUpload của bạn tự handle việc hiển thị dựa trên initialMedia
-              initialMedia={product.image} 
+              initialMedia={product.image}
               onChange={field.onChange}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -299,10 +299,9 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel>Thư viện ảnh</FieldLabel>
-            <ProductGallery
-              value={field.value}
+            <GalleryUpload
               onChange={field.onChange}
-              initialMedias={product.gallery ? product.gallery : []}
+              initialMedia={product.gallery ? product.gallery : []}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -317,10 +316,10 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
             <><Spinner className="mr-2" /> Đang lưu...</>
           ) : "Lưu thay đổi"}
         </Button>
-        
-        <Button 
-          type="button" 
-          variant="outline" 
+
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => window.history.back()} // Nút hủy quay lại trang trước
         >
           Quay lại
