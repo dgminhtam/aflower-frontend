@@ -1,6 +1,7 @@
 "use client"
 
-import { BookOpen, GalleryVerticalEnd, Plus, Settings2, SquareTerminal } from "lucide-react"
+import { siteConfig } from "@/config/site"
+import { Plus } from "lucide-react"
 import { usePathname } from "next/navigation"
 import * as React from "react"
 
@@ -123,7 +124,7 @@ function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>Chức năng</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
@@ -203,7 +204,7 @@ function TeamSwitcher({
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">Teams</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-muted-foreground text-xs">Đội ngũ</DropdownMenuLabel>
             {teams.map((team, index) => (
               <DropdownMenuItem key={team.name} onClick={() => setActiveTeam(team)} className="gap-2 p-2">
                 <div className="flex size-6 items-center justify-center rounded-md border">
@@ -218,70 +219,13 @@ function TeamSwitcher({
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">Add team</div>
+              <div className="text-muted-foreground font-medium">Thêm đội ngũ</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
   )
-}
-
-const data = {
-  teams: [
-    {
-      name: "Aflower",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-  ],
-  navMain: [
-    {
-      title: "Quản lý tài nguyên",
-      url: "#",
-      icon: SquareTerminal,
-      items: [
-        {
-          title: "Danh mục",
-          url: "/categories",
-        },
-        {
-          title: "Sản phẩm",
-          url: "/products",
-        },
-      ],
-    },
-    {
-      title: "Tài liệu",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Media",
-          url: "/medias",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "Shipping",
-          url: "#",
-        },
-        {
-          title: "Payment",
-          url: "#",
-        },
-        {
-          title: "Email",
-          url: "#",
-        },
-      ],
-    },
-  ],
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -293,10 +237,10 @@ export function AppSidebar({ user, isAuthenticated, ...props }: AppSidebarProps)
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={siteConfig.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={siteConfig.navMain} />
       </SidebarContent>
       <SidebarFooter>
         {isAuthenticated && <NavUser user={user} />}

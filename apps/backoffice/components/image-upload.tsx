@@ -5,11 +5,12 @@ import { Media } from "@/app/lib/media/definitions"
 import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
-import { Loader2, Upload, X } from "lucide-react"
+import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react"
 import Image from "next/image"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
+import { MediaSelector } from "./media-selector"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
@@ -58,19 +59,16 @@ export function ImageUpload({ initialMedia, onChange, onUploadSuccess, error }: 
     return null // Không có lỗi
   }
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    // 3. Sử dụng validateFile
+  const processFile = async (file: File) => {
     const validationError = validateFile(file)
     if (validationError) {
       toast.error("File không hợp lệ", { description: validationError })
-      // Reset input để người dùng có thể chọn lại file (kể cả file cũ)
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
       return
     }
+
     const reader = new FileReader()
     reader.onloadend = () => {
       const result = reader.result as string
@@ -104,6 +102,12 @@ export function ImageUpload({ initialMedia, onChange, onUploadSuccess, error }: 
     }
   }
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await processFile(file)
+  }
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
@@ -125,21 +129,14 @@ export function ImageUpload({ initialMedia, onChange, onUploadSuccess, error }: 
     if (files && files.length > 0) {
       const file = files[0]
 
-      // 4. Sử dụng validateFile (kiểm tra type trước cho nhanh)
-      if (file != undefined && file.type.startsWith("image/")) {
-
-        const validationError = validateFile(file)
-        if (validationError) {
-          toast.error("File không hợp lệ", { description: validationError })
-          return
+      if (file && file.type.startsWith("image/")) {
+        // Update input file manually to keep it in sync (optional but good for UX if they click again)
+        if (fileInputRef.current) {
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(file)
+          fileInputRef.current.files = dataTransfer.files
         }
-
-        const dataTransfer = new DataTransfer()
-        dataTransfer.items.add(file)
-        fileInputRef.current!.files = dataTransfer.files
-        handleImageChange({
-          target: { files: dataTransfer.files },
-        } as React.ChangeEvent<HTMLInputElement>)
+        processFile(file)
       } else {
         toast.error("File không hợp lệ", {
           description: "Vui lòng chỉ thả file hình ảnh.",
@@ -158,14 +155,21 @@ export function ImageUpload({ initialMedia, onChange, onUploadSuccess, error }: 
     }
   }
 
+  const handleSelectMedia = (media: Media) => {
+    setImagePreview(media.urlMedium)
+    setUploadedMedia(media)
+    onChange?.(media.id)
+    setHasUploadedInternally(true)
+  }
+
   return (
     <div className="space-y-2">
       <div className="space-y-3">
         {imagePreview ? (
-          <div className="relative w-full max-w-xs">
+          <div className="relative w-full max-w-xs group">
             <Image
               src={imagePreview || "/placeholder.svg"}
-              alt="Preview"
+              alt={uploadedMedia?.name || "Uploaded image"}
               className="w-full object-cover rounded-lg border border-input"
               width={300}
               height={300}
@@ -176,44 +180,62 @@ export function ImageUpload({ initialMedia, onChange, onUploadSuccess, error }: 
               </div>
             )}
             {!isLoading && (
-              <Button
-                onClick={handleClearImage}
-                variant={"outline"}
-                size="icon"
-                className="absolute top-2 right-2 cursor-pointer rounded-full"
-              >
-                <X />
-              </Button>
+              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <MediaSelector onSelect={handleSelectMedia}>
+                  <Button variant="secondary" size="icon" className="rounded-full h-8 w-8" type="button">
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                </MediaSelector>
+                <Button
+                  onClick={handleClearImage}
+                  variant="destructive"
+                  size="icon"
+                  className="rounded-full h-8 w-8"
+                  type="button"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
         ) : (
-          <Empty
-            onClick={() => !isLoading && fileInputRef.current?.click()}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-56 ${isDragging ? "bg-muted border-primary border-2" : ""
-              }`}
-          >
-            {isLoading ? (
-              <EmptyContent>
-                <EmptyMedia>
-                  <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
-                </EmptyMedia>
-                <EmptyTitle>Đang tải lên...</EmptyTitle>
-              </EmptyContent>
-            ) : (
-              <EmptyContent>
-                <EmptyMedia variant="icon">
-                  <Upload />
-                </EmptyMedia>
-                <EmptyHeader>
-                  <EmptyTitle>{isDragging ? "Thả để tải lên" : "Nhấp để tải lên hoặc kéo thả"}</EmptyTitle>
-                  <EmptyDescription>PNG, JPG, WEBP (tối đa 5MB)</EmptyDescription>
-                </EmptyHeader>
-              </EmptyContent>
-            )}
-          </Empty>
+          <div className="space-y-2">
+            <Empty
+              onClick={() => !isLoading && fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-56 ${isDragging ? "bg-muted border-primary border-2" : ""
+                }`}
+            >
+              {isLoading ? (
+                <EmptyContent>
+                  <EmptyMedia>
+                    <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
+                  </EmptyMedia>
+                  <EmptyTitle>Đang tải lên...</EmptyTitle>
+                </EmptyContent>
+              ) : (
+                <EmptyContent>
+                  <EmptyMedia variant="icon">
+                    <Upload />
+                  </EmptyMedia>
+                  <EmptyHeader>
+                    <EmptyTitle>{isDragging ? "Thả để tải lên" : "Nhấp để tải lên hoặc kéo thả"}</EmptyTitle>
+                    <EmptyDescription>PNG, JPG, WEBP (tối đa 5MB)</EmptyDescription>
+                  </EmptyHeader>
+                </EmptyContent>
+              )}
+            </Empty>
+
+            <div className="flex justify-center">
+              <MediaSelector onSelect={handleSelectMedia}>
+                <Button variant="outline" type="button" className="w-full">
+                  <ImageIcon className="mr-2 h-4 w-4" /> Chọn từ thư viện
+                </Button>
+              </MediaSelector>
+            </div>
+          </div>
         )}
         <Input ref={fileInputRef}
           type="file"

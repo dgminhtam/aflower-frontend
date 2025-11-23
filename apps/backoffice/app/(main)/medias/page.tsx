@@ -1,3 +1,5 @@
+
+
 import { Suspense } from "react";
 import { getMedias } from "@/app/api/medias/action";
 import { buildFilterQuery, buildSortQuery } from "@/app/lib/utils";
@@ -11,6 +13,8 @@ import {
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { MediaFilter } from "./media-filter";
+import { MediaUploadDialog } from "./media-upload-dialog";
 
 interface MediaPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -21,12 +25,20 @@ export default function Page({ searchParams }: MediaPageProps) {
     <Card>
       {/* Static Header - Hiển thị ngay lập tức */}
       <CardHeader>
-        <CardTitle>Thư viện Media</CardTitle>
-        <CardDescription>
-          Quản lý toàn bộ hình ảnh và tệp tin đa phương tiện.
-        </CardDescription>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1.5">
+            <CardTitle>Thư viện Media</CardTitle>
+            <CardDescription>
+              Quản lý toàn bộ hình ảnh và tệp tin đa phương tiện.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <MediaFilter />
+            <MediaUploadDialog />
+          </div>
+        </div>
       </CardHeader>
-      
+
       <Separator />
 
       {/* Loading State */}
@@ -38,10 +50,10 @@ export default function Page({ searchParams }: MediaPageProps) {
 }
 
 // --- Component Fetch Data ---
-async function MediaListContent({ 
-  searchParamsPromise 
-}: { 
-  searchParamsPromise: Promise<{ [key: string]: string | string[] | undefined }> 
+async function MediaListContent({
+  searchParamsPromise
+}: {
+  searchParamsPromise: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const resolvedParams = await searchParamsPromise;
   const { page = '1', size = '12', sort = '', ...searchFields } = resolvedParams;
@@ -82,18 +94,18 @@ function MediaListSkeleton() {
             <Skeleton className="aspect-square w-full rounded-lg" />
             {/* Tên file và dung lượng */}
             <div className="space-y-1">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
             </div>
           </div>
         ))}
       </div>
-      
+
       {/* Pagination Skeleton */}
       <div className="flex items-center justify-end gap-2 pt-4">
-          <Skeleton className="h-8 w-20" /> {/* Previous */}
-          <Skeleton className="h-8 w-8" />  {/* Page number */}
-          <Skeleton className="h-8 w-20" /> {/* Next */}
+        <Skeleton className="h-8 w-20" /> {/* Previous */}
+        <Skeleton className="h-8 w-8" />  {/* Page number */}
+        <Skeleton className="h-8 w-20" /> {/* Next */}
       </div>
     </CardContent>
   )
