@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useEffect } from "react"
-import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { useEffect } from "react"
+import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
+import * as z from "zod"
 
 // Import UI & Actions
 import { createProduct } from "@/app/api/products/action"
@@ -13,7 +13,7 @@ import { STATUS_VALUES } from "@/app/lib/products/definitions"
 import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils"
 
 import { Combobox } from "@/components/combobox"
-import { ProductGallery } from "@/components/gallery-upload"
+import { GalleryUpload } from "@/components/gallery-upload"
 import { ImageUpload } from "@/components/image-upload"
 import { MultiSelectCombobox } from "@/components/multiple-select-combobox"
 import { Button } from "@workspace/ui/components/button"
@@ -47,7 +47,7 @@ const statuses = [
 
 export function CreateProductForm({ categories = [] }: { categories: Category[] }) {
   const categoryOptions = convertCategoriesToMultiSelectOptions(categories);
-  
+
   const form = useForm<CreateProductRequest>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
@@ -66,7 +66,7 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
 
   // --- AUTO GENERATE SLUG ---
   const nameValue = form.watch("name")
-  
+
   useEffect(() => {
     if (nameValue) {
       // Logic tạo slug chuẩn SEO: Chữ thường + Bỏ dấu + Thay khoảng trắng bằng gạch ngang
@@ -86,7 +86,7 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
     try {
       await createProduct(data)
       toast.success("Tạo sản phẩm thành công")
-      
+
       // Reset form về trạng thái ban đầu để nhập sản phẩm tiếp theo
       form.reset({
         name: "",
@@ -111,7 +111,7 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      
+
       {/* Tên & SKU */}
       <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Controller
@@ -206,7 +206,7 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
               <Combobox
                 {...field}
                 options={statuses}
-                label="Chọn trạng thái" 
+                label="Chọn trạng thái"
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -243,7 +243,7 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
             </Field>
           )}
         />
-        
+
         {/* Giá niêm yết */}
         <Controller
           name="originPrice"
@@ -297,10 +297,9 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor="gallery">Thư viện ảnh</FieldLabel>
-            <ProductGallery
-              value={field.value}
+            <GalleryUpload
               onChange={field.onChange}
-              initialMedias={[]} // Form tạo mới mảng rỗng
+              initialMedia={[]}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -308,16 +307,16 @@ export function CreateProductForm({ categories = [] }: { categories: Category[] 
       />
 
       <Separator />
-      
+
       <div className="flex gap-4">
         <Button disabled={form.formState.isSubmitting} type="submit">
           {form.formState.isSubmitting ? (
             <><Spinner className="mr-2" /> Đang tạo...</>
           ) : "Tạo sản phẩm"}
         </Button>
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => window.history.back()}
         >
           Hủy
