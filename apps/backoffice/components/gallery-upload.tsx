@@ -3,10 +3,10 @@
 import { uploadMedia } from "@/app/api/medias/action"
 import { Media } from "@/app/lib/media/definitions"
 import { Button } from "@workspace/ui/components/button"
-import { Dialog, DialogContent } from "@workspace/ui/components/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@workspace/ui/components/dialog"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
-import { ChevronLeft, ChevronRight, GripVertical, Image as ImageIcon, Loader2, Trash2, Upload, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, GripVertical, Image as ImageIcon, Loader2, X, Upload } from "lucide-react"
 import Image from "next/image"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
@@ -25,6 +25,12 @@ interface GalleryUploadProps {
     disabled?: boolean
 }
 
+interface UploadingFile {
+    id: string
+    file: File
+    previewUrl: string
+}
+
 export function GalleryUpload({
     initialMedia = [],
     onChange,
@@ -34,19 +40,20 @@ export function GalleryUpload({
     disabled = false,
 }: GalleryUploadProps) {
     const [medias, setMedias] = useState<Media[]>(initialMedia)
-    const [isLoading, setIsLoading] = useState(false)
+    const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([])
     const [isDragging, setIsDragging] = useState(false)
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
     const [draggedId, setDraggedId] = useState<number | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [previewMedia, setPreviewMedia] = useState<Media | null>(null)
     const [previewIndex, setPreviewIndex] = useState<number>(0)
+    const prevInitialMediaRef = useRef(initialMedia)
 
     useEffect(() => {
-        if (initialMedia && initialMedia.length > 0) {
-            setMedias(initialMedia)
+        if (JSON.stringify(prevInitialMediaRef.current) !== JSON.stringify(initialMedia)) {
+            setMedias(initialMedia || [])
+            prevInitialMediaRef.current = initialMedia
         }
-    }, [])
+    }, [initialMedia])
 
     useEffect(() => {
         if (error) {
@@ -77,7 +84,7 @@ export function GalleryUpload({
         const validFiles: File[] = []
         const errors: string[] = []
 
-        if (maxFiles && medias.length + files.length > maxFiles) {
+        if (maxFiles && medias.length + files.length + uploadingFiles.length > maxFiles) {
             toast.error(`Chỉ được phép tải lên tối đa ${maxFiles} ảnh.`)
             return
         }
@@ -97,30 +104,48 @@ export function GalleryUpload({
 
         if (validFiles.length === 0) return
 
-        setIsLoading(true)
+        // Create optimistic items
+        const newUploadingFiles = validFiles.map((file) => ({
+            id: Math.random().toString(36).substring(7),
+            file,
+            previewUrl: URL.createObjectURL(file),
+        }))
+
+        setUploadingFiles((prev) => [...prev, ...newUploadingFiles])
+
         const uploaded: Media[] = []
 
         try {
             await Promise.all(
-                validFiles.map(async (file) => {
-                    const formData = new FormData()
-                    formData.append("file", file)
-                    const media = await uploadMedia(formData)
-                    uploaded.push(media)
+                newUploadingFiles.map(async (uploadingFile) => {
+                    try {
+                        const formData = new FormData()
+                        formData.append("file", uploadingFile.file)
+                        const media = await uploadMedia(formData)
+                        uploaded.push(media)
+                    } catch (error) {
+                        console.error(`Failed to upload ${uploadingFile.file.name}`, error)
+                        toast.error(`Không thể tải lên ${uploadingFile.file.name}`)
+                    } finally {
+                        // Remove from uploading state regardless of success/failure
+                        setUploadingFiles((prev) => prev.filter((f) => f.id !== uploadingFile.id))
+                        URL.revokeObjectURL(uploadingFile.previewUrl)
+                    }
                 })
             )
 
-            const newMedias = [...medias, ...uploaded]
-            updateMedias(newMedias)
-            onUploadSuccess?.(uploaded)
-            toast.success(`Đã tải lên ${uploaded.length} ảnh thành công!`)
+            if (uploaded.length > 0) {
+                const newMedias = [...medias, ...uploaded]
+                updateMedias(newMedias)
+                onUploadSuccess?.(uploaded)
+                toast.success(`Đã tải lên ${uploaded.length} ảnh thành công!`)
+            }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Upload failed"
             toast.error("Upload thất bại", {
                 description: errorMessage,
             })
         } finally {
-            setIsLoading(false)
             if (fileInputRef.current) {
                 fileInputRef.current.value = ""
             }
@@ -166,10 +191,6 @@ export function GalleryUpload({
         if (disabled) return
         const newMedias = medias.filter((m) => m.id !== id)
         updateMedias(newMedias)
-
-        const newSelected = new Set(selectedIds)
-        newSelected.delete(id)
-        setSelectedIds(newSelected)
     }
 
     const handleSelectMedia = (media: Media) => {
@@ -184,23 +205,6 @@ export function GalleryUpload({
         }
         const newMedias = [...medias, media]
         updateMedias(newMedias)
-    }
-
-    const toggleSelect = (id: number) => {
-        const newSelected = new Set(selectedIds)
-        if (newSelected.has(id)) {
-            newSelected.delete(id)
-        } else {
-            newSelected.add(id)
-        }
-        setSelectedIds(newSelected)
-    }
-
-    const handleBulkDelete = () => {
-        if (disabled) return
-        const newMedias = medias.filter((m) => !selectedIds.has(m.id))
-        updateMedias(newMedias)
-        setSelectedIds(new Set())
     }
 
     // Drag and Drop Reordering
@@ -228,7 +232,9 @@ export function GalleryUpload({
         setDraggedId(null)
     }
 
-    const canAddMore = !maxFiles || medias.length < maxFiles
+    const canAddMore = !maxFiles || medias.length + uploadingFiles.length < maxFiles
+    const isLoading = uploadingFiles.length > 0
+
     // Preview handlers
     const handleOpenPreview = (media: Media) => {
         const index = medias.findIndex((m) => m.id === media.id)
@@ -270,42 +276,34 @@ export function GalleryUpload({
         window.addEventListener("keydown", handleKeyDown)
         return () => window.removeEventListener("keydown", handleKeyDown)
     }, [previewMedia, previewIndex, medias])
+
     return (
         <div className="space-y-4">
             {/* Upload Area */}
             {canAddMore && (
                 <div className="space-y-2">
                     <Empty
-                        onClick={() => !isLoading && !disabled && fileInputRef.current?.click()}
+                        onClick={() => !disabled && fileInputRef.current?.click()}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-colors min-h-40 ${isDragging ? "bg-muted border-primary border-2" : ""
+                        className={`cursor-pointer border border-dashed hover:bg-muted/50 hover:border-primary transition-all duration-200 min-h-40 ${isDragging ? "bg-muted border-primary border-2 scale-[0.99]" : ""
                             } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        {isLoading ? (
-                            <EmptyContent>
-                                <EmptyMedia>
-                                    <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
-                                </EmptyMedia>
-                                <EmptyTitle>Đang tải lên...</EmptyTitle>
-                            </EmptyContent>
-                        ) : (
-                            <EmptyContent>
-                                <EmptyMedia variant="icon">
-                                    <Upload />
-                                </EmptyMedia>
-                                <EmptyHeader>
-                                    <EmptyTitle>{isDragging ? "Thả để tải lên" : "Nhấp để tải lên hoặc kéo thả"}</EmptyTitle>
-                                    <EmptyDescription>PNG, JPG, WEBP (tối đa 5MB)</EmptyDescription>
-                                </EmptyHeader>
-                            </EmptyContent>
-                        )}
+                        <EmptyContent>
+                            <EmptyMedia variant="icon">
+                                <Upload className={isDragging ? "animate-bounce" : ""} />
+                            </EmptyMedia>
+                            <EmptyHeader>
+                                <EmptyTitle>{isDragging ? "Thả để tải lên" : "Nhấp để tải lên hoặc kéo thả"}</EmptyTitle>
+                                <EmptyDescription>PNG, JPG, WEBP (tối đa 5MB)</EmptyDescription>
+                            </EmptyHeader>
+                        </EmptyContent>
                     </Empty>
 
                     <div className="flex justify-center">
                         <MediaSelector onSelect={handleSelectMedia}>
-                            <Button variant="outline" type="button" className="w-full" disabled={disabled || isLoading}>
+                            <Button variant="outline" type="button" className="w-full" disabled={disabled}>
                                 <ImageIcon className="mr-2 h-4 w-4" /> Chọn từ thư viện
                             </Button>
                         </MediaSelector>
@@ -316,7 +314,7 @@ export function GalleryUpload({
                         type="file"
                         accept={ALLOWED_TYPES.join(",")}
                         onChange={handleFileChange}
-                        disabled={isLoading || disabled}
+                        disabled={disabled}
                         multiple
                         className="hidden"
                     />
@@ -324,28 +322,12 @@ export function GalleryUpload({
             )}
 
             {/* Gallery Grid */}
-            {medias.length > 0 && (
+            {(medias.length > 0 || uploadingFiles.length > 0) && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Bulk Actions */}
-                    {selectedIds.size > 0 && (
-                        <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg border border-muted">
-                            <span className="text-sm font-medium px-2">{selectedIds.size} đã chọn</span>
-                            <Button
-                                onClick={handleBulkDelete}
-                                variant="destructive"
-                                size="sm"
-                                className="gap-2 h-8"
-                                type="button"
-                            >
-                                <Trash2 className="w-4 h-4" /> Xóa đã chọn
-                            </Button>
-                        </div>
-                    )}
-
                     {/* Image List */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {/* Existing Medias */}
                         {medias.map((media) => {
-                            const isSelected = selectedIds.has(media.id)
                             const isBeingDragged = draggedId === media.id
 
                             return (
@@ -362,8 +344,8 @@ export function GalleryUpload({
                                     }}
                                     className={`
                     relative group aspect-square rounded-lg border overflow-hidden bg-background transition-all duration-200 cursor-pointer
-                    ${isSelected ? "ring-2 ring-primary border-primary shadow-sm" : "border-input hover:border-primary/50"}
-                    ${isBeingDragged ? "opacity-40 scale-95 grayscale" : "opacity-100"}
+                    border-input hover:border-primary/50 hover:shadow-md
+                    ${isBeingDragged ? "opacity-40 scale-95 grayscale" : "opacity-100 hover:scale-[1.02]"}
                   `}
                                 >
                                     <Image
@@ -371,7 +353,7 @@ export function GalleryUpload({
                                         alt={media.name || "Product image"}
                                         fill
                                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
-                                        className="object-cover"
+                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
 
                                     {/* Controls Overlay */}
@@ -381,29 +363,11 @@ export function GalleryUpload({
                                             <div
                                                 className={`
                           absolute inset-0 bg-black/20 backdrop-blur-[1px] transition-opacity flex items-center justify-center cursor-move
-                          ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+                          opacity-0 group-hover:opacity-100
                         `}
                                             >
                                                 <GripVertical className="w-6 h-6 text-white/90 drop-shadow-md" />
                                             </div>
-
-                                            {/* Select Checkbox */}
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    toggleSelect(media.id)
-                                                }}
-                                                className={`
-                          absolute top-2 left-2 w-6 h-6 rounded border shadow-sm flex items-center justify-center transition-all
-                          ${isSelected
-                                                        ? "bg-primary border-primary text-primary-foreground"
-                                                        : "bg-black/40 border-white/50 hover:bg-black/60"
-                                                    }
-                        `}
-                                            >
-                                                {isSelected && <span className="text-xs font-bold">✓</span>}
-                                            </button>
 
                                             {/* Delete Button */}
                                             <Button
@@ -414,79 +378,117 @@ export function GalleryUpload({
                                                 }}
                                                 variant="destructive"
                                                 size="icon"
-                                                className="absolute top-2 right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                                className="absolute top-2 right-2 w-7 h-7 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm hover:scale-110"
                                             >
-                                                <X className="w-3 h-3" />
+                                                <X className="w-4 h-4" />
                                             </Button>
                                         </>
                                     )}
-                                    {/* Image Preview Dialog */}
-                                    <Dialog open={!!previewMedia} onOpenChange={(open) => { if (!open) handleClosePreview() }}>
-                                        <DialogContent className="w-[95vw] h-[95vh] max-w-[95vw] max-h-[95vh] p-0" showCloseButton={false}>
-                                            {previewMedia && (
-                                                <div className="relative w-full h-full flex flex-col bg-black">
-                                                    {/* Header */}
-                                                    <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent">
-                                                        <div className="text-white">
-                                                            <p className="font-medium">{previewMedia.name}</p>
-                                                            <p className="text-sm text-white/70">
-                                                                {previewIndex + 1} / {medias.length}
-                                                            </p>
-                                                        </div>
-                                                        <Button
-                                                            onClick={handleClosePreview}
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="text-white hover:bg-white/20"
-                                                            type="button"
-                                                        >
-                                                            <X className="h-5 w-5" />
-                                                        </Button>
-                                                    </div>
-                                                    {/* Image Container */}
-                                                    <div className="relative flex-1 flex items-center justify-center p-12">
-                                                        <Image
-                                                            src={previewMedia.urlLarge || previewMedia.urlMedium || "/placeholder.svg"}
-                                                            alt={previewMedia.name || "Preview"}
-                                                            fill
-                                                            className="object-contain"
-                                                            sizes="90vw"
-                                                            priority
-                                                        />
-                                                    </div>
-                                                    {/* Navigation Controls */}
-                                                    {medias.length > 1 && (
-                                                        <>
-                                                            <Button
-                                                                onClick={handlePreviousImage}
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
-                                                                type="button"
-                                                            >
-                                                                <ChevronLeft className="h-8 w-8" />
-                                                            </Button>
-                                                            <Button
-                                                                onClick={handleNextImage}
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
-                                                                type="button"
-                                                            >
-                                                                <ChevronRight className="h-8 w-8" />
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </DialogContent>
-                                    </Dialog>
                                 </div>
                             )
                         })}
+
+                        {/* Uploading Files (Optimistic UI) */}
+                        {uploadingFiles.map((file) => (
+                            <div
+                                key={file.id}
+                                className="relative aspect-square rounded-lg border overflow-hidden bg-muted animate-pulse"
+                            >
+                                <Image
+                                    src={file.previewUrl}
+                                    alt="Uploading..."
+                                    fill
+                                    className="object-cover opacity-50"
+                                />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
+                                    <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+                                    <span className="text-xs font-medium text-white drop-shadow-md">Đang tải lên...</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
+
+            {/* Image Preview Dialog */}
+            <Dialog open={!!previewMedia} onOpenChange={(open) => { if (!open) handleClosePreview() }}>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-transparent border-none shadow-none" showCloseButton={false}>
+                    {previewMedia && (
+                        <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
+                            {/* Accessible Title */}
+                            <div className="sr-only">
+                                <DialogTitle>{previewMedia.name}</DialogTitle>
+                            </div>
+
+                            {/* Backdrop & Close Area */}
+                            <div
+                                className="absolute inset-0 pointer-events-auto"
+                                onClick={handleClosePreview}
+                            />
+
+                            {/* Main Image Container */}
+                            <div className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
+                                <div className="relative w-full h-full max-w-7xl max-h-[90vh] pointer-events-auto">
+                                    <Image
+                                        src={previewMedia.urlLarge || previewMedia.urlMedium || "/placeholder.svg"}
+                                        alt={previewMedia.name || "Preview"}
+                                        fill
+                                        className="object-contain drop-shadow-2xl"
+                                        sizes="95vw"
+                                        priority
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Top Bar Controls */}
+                            <div className="absolute top-4 right-4 z-50 flex items-center gap-2 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className="bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-white/10">
+                                    {previewMedia.name} <span className="text-white/50 mx-2">|</span> {previewIndex + 1} / {medias.length}
+                                </div>
+                                <Button
+                                    onClick={handleClosePreview}
+                                    variant="secondary"
+                                    size="icon"
+                                    className="rounded-full h-10 w-10 bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md shadow-lg"
+                                    type="button"
+                                >
+                                    <X className="h-5 w-5" />
+                                </Button>
+                            </div>
+
+                            {/* Navigation Controls */}
+                            {medias.length > 1 && (
+                                <>
+                                    <Button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handlePreviousImage()
+                                        }}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 text-white bg-black/40 hover:bg-black/60 h-12 w-12 rounded-full backdrop-blur-md border border-white/20 shadow-xl transition-all pointer-events-auto"
+                                        type="button"
+                                    >
+                                        <ChevronLeft className="h-8 w-8" />
+                                    </Button>
+                                    <Button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleNextImage()
+                                        }}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 text-white bg-black/40 hover:bg-black/60 h-12 w-12 rounded-full backdrop-blur-md border border-white/20 shadow-xl transition-all pointer-events-auto"
+                                        type="button"
+                                    >
+                                        <ChevronRight className="h-8 w-8" />
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
