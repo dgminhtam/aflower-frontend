@@ -40,10 +40,10 @@ export function GalleryUpload({
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
-        if (initialMedia) {
+        if (initialMedia && initialMedia.length > 0) {
             setMedias(initialMedia)
         }
-    }, [initialMedia])
+    }, [])
 
     useEffect(() => {
         if (error) {
