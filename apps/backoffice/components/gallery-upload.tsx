@@ -3,9 +3,10 @@
 import { uploadMedia } from "@/app/api/medias/action"
 import { Media } from "@/app/lib/media/definitions"
 import { Button } from "@workspace/ui/components/button"
+import { Dialog, DialogContent } from "@workspace/ui/components/dialog"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
-import { GripVertical, Image as ImageIcon, Loader2, Trash2, Upload, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, GripVertical, Image as ImageIcon, Loader2, Trash2, Upload, X } from "lucide-react"
 import Image from "next/image"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
@@ -38,6 +39,8 @@ export function GalleryUpload({
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
     const [draggedId, setDraggedId] = useState<number | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [previewMedia, setPreviewMedia] = useState<Media | null>(null)
+    const [previewIndex, setPreviewIndex] = useState<number>(0)
 
     useEffect(() => {
         if (initialMedia && initialMedia.length > 0) {
@@ -226,7 +229,47 @@ export function GalleryUpload({
     }
 
     const canAddMore = !maxFiles || medias.length < maxFiles
-
+    // Preview handlers
+    const handleOpenPreview = (media: Media) => {
+        const index = medias.findIndex((m) => m.id === media.id)
+        setPreviewMedia(media)
+        setPreviewIndex(index)
+    }
+    const handleClosePreview = () => {
+        setPreviewMedia(null)
+    }
+    const handleNextImage = () => {
+        if (medias.length === 0) return
+        const nextIndex = (previewIndex + 1) % medias.length
+        setPreviewIndex(nextIndex)
+        const nextMedia = medias[nextIndex]
+        if (nextMedia) setPreviewMedia(nextMedia)
+    }
+    const handlePreviousImage = () => {
+        if (medias.length === 0) return
+        const prevIndex = (previewIndex - 1 + medias.length) % medias.length
+        setPreviewIndex(prevIndex)
+        const prevMedia = medias[prevIndex]
+        if (prevMedia) setPreviewMedia(prevMedia)
+    }
+    // Keyboard shortcuts for preview
+    useEffect(() => {
+        if (!previewMedia) return
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowRight") {
+                e.preventDefault()
+                handleNextImage()
+            } else if (e.key === "ArrowLeft") {
+                e.preventDefault()
+                handlePreviousImage()
+            } else if (e.key === "Escape") {
+                e.preventDefault()
+                handleClosePreview()
+            }
+        }
+        window.addEventListener("keydown", handleKeyDown)
+        return () => window.removeEventListener("keydown", handleKeyDown)
+    }, [previewMedia, previewIndex, medias])
     return (
         <div className="space-y-4">
             {/* Upload Area */}
@@ -312,8 +355,13 @@ export function GalleryUpload({
                                     onDragStart={(e) => handleDragStart(e, media.id)}
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={() => handleDropImage(media.id)}
+                                    onClick={(e) => {
+                                        // Không mở preview nếu click vào button/checkbox
+                                        if ((e.target as HTMLElement).closest('button')) return
+                                        handleOpenPreview(media)
+                                    }}
                                     className={`
-                    relative group aspect-square rounded-lg border overflow-hidden bg-background transition-all duration-200
+                    relative group aspect-square rounded-lg border overflow-hidden bg-background transition-all duration-200 cursor-pointer
                     ${isSelected ? "ring-2 ring-primary border-primary shadow-sm" : "border-input hover:border-primary/50"}
                     ${isBeingDragged ? "opacity-40 scale-95 grayscale" : "opacity-100"}
                   `}
@@ -372,6 +420,67 @@ export function GalleryUpload({
                                             </Button>
                                         </>
                                     )}
+                                    {/* Image Preview Dialog */}
+                                    <Dialog open={!!previewMedia} onOpenChange={(open) => { if (!open) handleClosePreview() }}>
+                                        <DialogContent className="w-[95vw] h-[95vh] max-w-[95vw] max-h-[95vh] p-0" showCloseButton={false}>
+                                            {previewMedia && (
+                                                <div className="relative w-full h-full flex flex-col bg-black">
+                                                    {/* Header */}
+                                                    <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent">
+                                                        <div className="text-white">
+                                                            <p className="font-medium">{previewMedia.name}</p>
+                                                            <p className="text-sm text-white/70">
+                                                                {previewIndex + 1} / {medias.length}
+                                                            </p>
+                                                        </div>
+                                                        <Button
+                                                            onClick={handleClosePreview}
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-white hover:bg-white/20"
+                                                            type="button"
+                                                        >
+                                                            <X className="h-5 w-5" />
+                                                        </Button>
+                                                    </div>
+                                                    {/* Image Container */}
+                                                    <div className="relative flex-1 flex items-center justify-center p-12">
+                                                        <Image
+                                                            src={previewMedia.urlLarge || previewMedia.urlMedium || "/placeholder.svg"}
+                                                            alt={previewMedia.name || "Preview"}
+                                                            fill
+                                                            className="object-contain"
+                                                            sizes="90vw"
+                                                            priority
+                                                        />
+                                                    </div>
+                                                    {/* Navigation Controls */}
+                                                    {medias.length > 1 && (
+                                                        <>
+                                                            <Button
+                                                                onClick={handlePreviousImage}
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                                                                type="button"
+                                                            >
+                                                                <ChevronLeft className="h-8 w-8" />
+                                                            </Button>
+                                                            <Button
+                                                                onClick={handleNextImage}
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                                                                type="button"
+                                                            >
+                                                                <ChevronRight className="h-8 w-8" />
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             )
                         })}
