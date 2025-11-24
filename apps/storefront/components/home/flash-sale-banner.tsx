@@ -3,8 +3,7 @@
 import { Button } from "@workspace/ui/components/button"
 import { FLASH_SALE_PRODUCTS } from "@/lib/placeholder-data"
 import { Timer } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+import { ProductCard } from "../ui/product-card"
 
 export function FlashSaleBanner() {
     return (
@@ -33,32 +32,12 @@ export function FlashSaleBanner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {FLASH_SALE_PRODUCTS.map((product) => (
-                        <div key={product.id} className="bg-white rounded-xl overflow-hidden shadow-lg group hover:-translate-y-1 transition-transform duration-300">
-                            <div className="relative aspect-[4/3] overflow-hidden">
-                                <Image
-                                    src={product.image}
-                                    alt={product.name}
-                                    fill
-                                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                                <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md shadow-md">
-                                    -{product.discount}%
-                                </div>
-                            </div>
-                            <div className="p-4">
-                                <h3 className="font-medium text-gray-900 truncate mb-2">{product.name}</h3>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-lg font-bold text-red-600">
-                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.salePrice)}
-                                    </span>
-                                    <span className="text-sm text-gray-400 line-through">
-                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
-                                    </span>
-                                </div>
-                                <Button className="w-full mt-4 rounded-full bg-red-600 hover:bg-red-700 text-white">
-                                    Mua ngay
-                                </Button>
-                            </div>
+                        <div key={product.id} className="bg-white rounded-2xl p-3 shadow-lg hover:-translate-y-1 transition-transform duration-300">
+                            <ProductCard
+                                {...product}
+                                category="FLASH SALE"
+                                className="h-full"
+                            />
                         </div>
                     ))}
                 </div>

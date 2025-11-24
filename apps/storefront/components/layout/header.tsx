@@ -26,7 +26,7 @@ export function Header() {
 
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-primary font-serif italic">Aflower</span>
+                        <span className="text-2xl font-bold text-primary">Aflower</span>
                     </Link>
 
                     {/* Desktop Navigation */}

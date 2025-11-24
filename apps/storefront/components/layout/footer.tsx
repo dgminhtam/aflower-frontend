@@ -8,7 +8,7 @@ export function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                     {/* Brand Info */}
                     <div className="space-y-4">
-                        <h3 className="text-2xl font-bold text-primary font-serif italic">Aflower</h3>
+                        <h3 className="text-2xl font-bold text-primary">Aflower</h3>
                         <p className="text-muted-foreground text-sm leading-relaxed">
                             Chúng tôi mang đến những đóa hoa tươi thắm và những chiếc bánh ngọt ngào nhất để bạn trao gửi yêu thương đến người thân.
                         </p>

@@ -38,7 +38,7 @@ export function HeroSection() {
                                 <div className="absolute inset-0 bg-black/20" />
                                 <div className="absolute inset-0 flex items-center justify-center text-center">
                                     <div className="container px-4">
-                                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 font-serif italic drop-shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000">
                                             {slide.title}
                                         </h1>
                                         <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-md animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
