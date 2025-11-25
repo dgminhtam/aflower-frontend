@@ -54,18 +54,18 @@ export function ProductCard({
                 <div className="absolute top-3 right-3 flex flex-col gap-2">
                     {/* Wishlist */}
                     <Button
-                        size="icon"
+                        size="icon-lg"
                         variant="secondary"
-                        className="h-9 w-9 rounded-full bg-white hover:bg-white text-gray-700 hover:text-[#A91B38] shadow-sm transition-colors"
+                        className="rounded-full bg-white hover:bg-white text-gray-700 hover:text-[#A91B38] shadow-sm transition-colors"
                     >
                         <Heart className="h-5 w-5" />
                     </Button>
 
                     {/* Quick View */}
                     <Button
-                        size="icon"
+                        size="icon-lg"
                         variant="secondary"
-                        className="h-9 w-9 rounded-full bg-white/60 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#A91B38] shadow-sm transition-colors"
+                        className="rounded-full bg-white/60 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#A91B38] shadow-sm transition-colors"
                     >
                         <Search className="h-5 w-5" />
                     </Button>
@@ -74,8 +74,8 @@ export function ProductCard({
                 {/* Add to Cart - Bottom Right */}
                 <div className="absolute bottom-3 right-3">
                     <Button
-                        size="icon"
-                        className="h-10 w-10 rounded-xl bg-white hover:bg-[#A91B38] text-gray-700 hover:text-white shadow-md transition-all"
+                        size="icon-lg"
+                        className="rounded-xl bg-white hover:bg-[#A91B38] text-gray-700 hover:text-white shadow-md transition-all"
                     >
                         <ShoppingBag className="h-5 w-5" />
                     </Button>
