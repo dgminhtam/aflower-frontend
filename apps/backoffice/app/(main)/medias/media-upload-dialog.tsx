@@ -14,16 +14,35 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { Upload, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { toast } from "sonner"
 
-export function MediaUploadDialog() {
-    const [open, setOpen] = useState(false)
+export function MediaUploadDialog({
+    open: controlledOpen,
+    onOpenChange: setControlledOpen,
+    droppedFiles
+}: {
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    droppedFiles?: File[]
+}) {
+    const [internalOpen, setInternalOpen] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
     const [dragActive, setDragActive] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const inputRef = useRef<HTMLInputElement>(null)
     const router = useRouter()
+
+    const isOpen = controlledOpen ?? internalOpen
+    const setOpen = setControlledOpen ?? setInternalOpen
+
+    // Handle dropped files from parent
+    useEffect(() => {
+        if (droppedFiles && droppedFiles.length > 0) {
+            setSelectedFiles(prev => [...prev, ...droppedFiles])
+            setOpen(true)
+        }
+    }, [droppedFiles, setOpen])
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault()
@@ -65,10 +84,6 @@ export function MediaUploadDialog() {
 
         setIsUploading(true)
         try {
-            // Upload sequentially or parallel depending on API support. 
-            // Assuming API handles one file at a time based on signature, but we can loop.
-            // The current action `uploadMedia` takes FormData.
-
             let successCount = 0
             let failCount = 0
 
@@ -104,9 +119,12 @@ export function MediaUploadDialog() {
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={isOpen} onOpenChange={(val) => {
+            if (!val) setSelectedFiles([]) // Clear files on close? Maybe not if user accidentally closes.
+            setOpen(val)
+        }}>
             <DialogTrigger asChild>
-                <Button>
+                <Button id="media-upload-trigger">
                     <Upload className="mr-2 h-4 w-4" /> Upload Media
                 </Button>
             </DialogTrigger>
