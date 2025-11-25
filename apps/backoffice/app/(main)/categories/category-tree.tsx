@@ -1,11 +1,11 @@
 "use client"
 
-import type { Category } from "@/app/lib/categories/definitions"
-import { Button } from "@workspace/ui/components/button"
+import type { Category } from "@/app/lib/categories/definitions";
+import { Button } from "@workspace/ui/components/button";
 import { ListTree, Minimize2, PlusSquare } from "lucide-react"; // Thêm icon cho đẹp
-import Link from "next/link"
-import { useCallback, useState } from "react"
-import { CategoryNode } from "./category-node"
+import Link from "next/link";
+import { useCallback, useState } from "react";
+import { CategoryNode } from "./category-node";
 
 interface CategoryTreeProps {
   categoryTree: Category[]
@@ -75,20 +75,18 @@ export function CategoryTree({ categoryTree }: CategoryTreeProps) {
         </Button>
       </div>
 
-      <div className="border rounded-lg p-4 bg-card">
-        {categoryTree.length === 0 ? (
-          <p className="text-center text-muted-foreground text-sm py-8">Chưa có danh mục nào.</p>
-        ) : (
-          categoryTree.map((category) => (
-            <CategoryNode
-              key={category.id}
-              category={category}
-              expandedIds={expandedIds}
-              onToggleExpand={handleToggleExpand}
-            />
-          ))
-        )}
-      </div>
+      {categoryTree.length === 0 ? (
+        <p className="text-center text-muted-foreground text-sm py-8">Chưa có danh mục nào.</p>
+      ) : (
+        categoryTree.map((category) => (
+          <CategoryNode
+            key={category.id}
+            category={category}
+            expandedIds={expandedIds}
+            onToggleExpand={handleToggleExpand}
+          />
+        ))
+      )}
     </div>
   )
 }

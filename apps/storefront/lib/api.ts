@@ -1,4 +1,4 @@
-import { ProductResponse, SearchParams } from "./definitions";
+import { Category, ProductResponse, SearchParams } from "./definitions";
 
 const API_TIMEOUT_MS = 10000;
 
@@ -99,4 +99,8 @@ export const getCategories = () => {
 
 export const getCategoriesTree = () => {
     return fetchPublic<any[]>(`/storefront/categories/tree`);
+};
+
+export const getRootCategories = () => {
+    return fetchPublic<Category[]>("/storefront/categories/root");
 };

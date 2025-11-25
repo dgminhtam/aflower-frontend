@@ -30,6 +30,7 @@ interface StatusComboboxProps {
     disabled?: boolean
     placeholder?: string
     label?: string
+    className?: string
 }
 
 export function Combobox({
@@ -38,6 +39,7 @@ export function Combobox({
     onChange,
     disabled,
     label,
+    className,
 }: StatusComboboxProps) {
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState(defaultValue ?? "")
@@ -63,19 +65,16 @@ export function Combobox({
                     role="combobox"
                     aria-expanded={open}
                     disabled={disabled}
-                    className="min-w-sm justify-between"
+                    className={cn("w-[200px] justify-between", className)}
                 >
-
                     {selectedLabel ? (
                         <span>{selectedLabel}</span>
                     ) : (
                         <span className="text-muted-foreground">{label}</span>
                     )}
-
                     <ChevronsUpDown className="opacity-50" />
                 </Button>
             </PopoverTrigger>
-
             <PopoverContent className="min-w-sm p-0">
                 <Command>
                     <CommandList>

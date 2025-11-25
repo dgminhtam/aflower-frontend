@@ -83,14 +83,18 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         params.delete("status[eq]");
         params.delete("categories.id[in]");
         params.set("page", "1");
+
+        startTransition(() => {
+            router.push(`${pathname}?${params.toString()}`);
+        });
     };
 
     const showClearButton = localSearch.length > 0 || localStatus.length > 0 || localCategory.length > 0;
 
     return (
         <Card className="mb-6 border-border bg-card p-4">
-            <div className="flex flex-col gap-4">
-                <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div className="md:col-span-4 relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search products by name..."
@@ -106,12 +110,16 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
                     />
                 </div>
 
-                <div className="flex flex-wrap  gap-2">
+                <div className="md:col-span-2">
                     <Combobox
                         defaultValue={localStatus}
                         options={statuses}
                         onChange={setLocalStatus}
-                        label="Trạng thái" />
+                        label="Trạng thái"
+                        className="w-full"
+                    />
+                </div>
+                <div className="md:col-span-3">
                     <MultiSelectCombobox
                         options={categoryOptions}
                         value={localCategory}
@@ -122,23 +130,23 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
                         }}
                         placeholder="Tìm kiếm theo danh mục"
                         mode="multiple"
+                        className="w-full"
                     />
+                </div>
+                <div className="md:col-span-3 flex items-center gap-2">
+                    <Button onClick={handleSearchSubmit} disabled={isPending}>
+                        {isPending ? <Spinner /> : <Search />} Tìm kiếm
+                    </Button>
                     {showClearButton && (
                         <Button
                             variant="ghost"
                             onClick={clearFilters}
                             disabled={isPending}
-                            size={"lg"}
                         >
-                            <X />
+                            <X className="mr-2 h-4 w-4" />
                             Clear
                         </Button>
                     )}
-                </div>
-                <div className="flex items-center gap-4">
-                    <Button onClick={handleSearchSubmit} disabled={isPending}>
-                        {isPending ? <Spinner /> : <Search />} Tìm kiếm
-                    </Button>
                 </div>
             </div>
         </Card>

@@ -308,7 +308,8 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
           role="combobox"
           aria-expanded={open}
           className={cn(
-            'w-full justify-between h-auto min-h-10 py-2 px-3',
+            'w-full justify-between px-3',
+            props.mode === 'single' ? 'h-10' : 'h-auto min-h-10 py-1',
             error && 'border-destructive focus-visible:ring-destructive',
             className
           )}

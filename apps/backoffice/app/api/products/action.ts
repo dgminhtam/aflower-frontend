@@ -20,7 +20,7 @@ export const createProduct = (request: CreateProductRequest): Promise<Product> =
 });
 
 export const updateProduct = (id: number, request: UpdateProductRequest): Promise<Product> => fetchAuthenticated<Product>(`/products/${id}`, {
-  method: "POST",
+  method: "PUT",
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,32 +1,56 @@
-import { CATEGORIES } from "@/lib/placeholder-data"
+import { getRootCategories } from "@/lib/api"
 import Image from "next/image"
 import Link from "next/link"
 
-export function CategoryGrid() {
+export async function CategoryGrid() {
+    const categories = await getRootCategories();
+
+    if (!categories || categories.length === 0) {
+        return null;
+    }
+
     return (
         <section className="py-16 container mx-auto px-4">
             <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-primary mb-2">Danh mục</h2>
-                <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
+                <h2 className="text-4xl font-serif font-medium text-primary mb-2">Categories</h2>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {CATEGORIES.map((category) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+                {categories.map((category) => (
                     <Link
                         key={category.id}
                         href={`/categories/${category.slug}`}
-                        className="group block"
+                        className="group flex flex-col items-center"
                     >
-                        <div className="relative aspect-square rounded-full overflow-hidden mb-4 border-2 border-transparent group-hover:border-primary transition-all duration-300 shadow-md group-hover:shadow-xl">
-                            <Image
-                                src={category.image}
-                                alt={category.name}
-                                fill
-                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                        <div className="relative w-64 h-64 mb-4 flex items-center justify-center">
+                            {/* Background Shape */}
+                            <div className="absolute inset-0 z-0">
+                                <Image
+                                    src="/category-shape.webp"
+                                    alt="shape"
+                                    fill
+                                    className="object-contain opacity-80"
+                                />
+                            </div>
+
+                            {/* Category Image */}
+                            <div className="relative z-10 w-60 h-60 transition-transform duration-500 group-hover:-translate-y-2">
+                                {category.image ? (
+                                    <Image
+                                        src={category.image.urlMedium || category.image.url}
+                                        alt={category.name}
+                                        fill
+                                        className="object-contain drop-shadow-lg"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                                        No Image
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <h3 className="text-center font-medium text-lg group-hover:text-primary transition-colors">
+
+                        <h3 className="text-center font-medium text-lg text-foreground group-hover:text-primary transition-colors">
                             {category.name}
                         </h3>
                     </Link>

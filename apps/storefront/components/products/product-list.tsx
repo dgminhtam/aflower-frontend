@@ -47,7 +47,7 @@ export function ProductList({ productPage }: ProductListProps) {
                     slug={product.slug}
                     price={product.originPrice}
                     salePrice={product.price < product.originPrice ? product.price : undefined}
-                    image={product.image?.urlMedium || "https://pub-385a99dd700a4d468b195ab2a2b2b555.r2.dev/originals/FIDGET%20SPINNER%201-3c5060e3-35a8-448d-a451-bdc71a6942d7.png"}
+                    image={product.image?.urlMedium || "/placeholder.webp"}
                     category={product.categories?.[0]?.name}
                     className="h-full"
                 />

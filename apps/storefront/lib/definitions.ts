@@ -15,6 +15,7 @@ export interface Category {
     description?: string;
     parentId?: number;
     children?: Category[];
+    image: Media;
 }
 
 export interface Product {
