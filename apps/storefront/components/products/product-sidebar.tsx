@@ -38,16 +38,78 @@ export function ProductSidebar({ categories }: ProductSidebarProps) {
         setMaxPrice(maxPriceParam);
     }, [minPriceParam, maxPriceParam]);
 
+    // Helper to find a category by ID in the tree
+    const findCategoryById = (cats: Category[], id: string): Category | null => {
+        for (const cat of cats) {
+            if (cat.id.toString() === id) return cat;
+            if (cat.children) {
+                const found = findCategoryById(cat.children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    // Helper to get all descendant IDs
+    const getAllChildIds = (category: Category): string[] => {
+        let ids: string[] = [category.id.toString()];
+        if (category.children) {
+            category.children.forEach((child) => {
+                ids = [...ids, ...getAllChildIds(child)];
+            });
+        }
+        return ids;
+    };
+
+    // Helper to find parent ID
+    const getParentId = (cats: Category[], childId: string, parentId: string | null = null): string | null => {
+        for (const cat of cats) {
+            if (cat.id.toString() === childId) return parentId;
+            if (cat.children) {
+                const found = getParentId(cat.children, childId, cat.id.toString());
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
     const handleCategoryChange = (categoryId: string, checked: boolean) => {
         const params = new URLSearchParams(searchParams.toString());
         let currentSelected = [...selectedCategories];
+        const category = findCategoryById(categories, categoryId);
 
         if (checked) {
+            // Case Checked: Select Parent + All Descendants
             if (!currentSelected.includes(categoryId)) {
                 currentSelected.push(categoryId);
             }
+
+            if (category) {
+                const childIds = getAllChildIds(category);
+                childIds.forEach((id) => {
+                    if (!currentSelected.includes(id)) {
+                        currentSelected.push(id);
+                    }
+                });
+            }
         } else {
+            // Case Unchecked: Deselect Parent + All Descendants + Bubble up to Ancestors
+
+            // 1. Remove self
             currentSelected = currentSelected.filter((id) => id !== categoryId);
+
+            // 2. Remove all descendants (Clean sweep)
+            if (category) {
+                const childIds = getAllChildIds(category);
+                currentSelected = currentSelected.filter((id) => !childIds.includes(id));
+            }
+
+            // 3. Remove ancestors (Bubble up)
+            let parentId = getParentId(categories, categoryId);
+            while (parentId) {
+                currentSelected = currentSelected.filter((id) => id !== parentId);
+                parentId = getParentId(categories, parentId);
+            }
         }
 
         if (currentSelected.length > 0) {
@@ -86,16 +148,18 @@ export function ProductSidebar({ categories }: ProductSidebarProps) {
     };
 
     const handleSliderChange = (value: number[]) => {
-        setPriceRange(value);
-        setMinPrice(value[0].toString());
-        setMaxPrice(value[1].toString());
+        if (value && value.length >= 2) {
+            setPriceRange(value);
+            setMinPrice(value[0].toString());
+            setMaxPrice(value[1].toString());
+        }
     };
 
     return (
         <div className="space-y-8">
             {/* Categories */}
             <div>
-                <h3 className="text-lg font-semibold mb-4">Danh mục</h3>
+                <h3 className="text-2xl font-bold mb-4">Danh mục</h3>
                 <div className="space-y-2">
                     {categories.map((category) => (
                         <CategoryTreeItem
@@ -111,7 +175,7 @@ export function ProductSidebar({ categories }: ProductSidebarProps) {
 
             {/* Price Filter */}
             <div>
-                <h3 className="text-lg font-semibold mb-4">Khoảng giá</h3>
+                <h3 className="text-2xl font-bold mb-4">Khoảng giá</h3>
                 <div className="space-y-6">
                     <Slider
                         defaultValue={[0, MAX_PRICE]}
@@ -129,7 +193,7 @@ export function ProductSidebar({ categories }: ProductSidebarProps) {
                             value={minPrice}
                             onChange={(e) => {
                                 setMinPrice(e.target.value);
-                                setPriceRange([Number(e.target.value), priceRange[1] ? priceRange[1] : 0]);
+                                setPriceRange([Number(e.target.value), priceRange[1] ?? 0]);
                             }}
                             className="h-9"
                         />
@@ -140,7 +204,7 @@ export function ProductSidebar({ categories }: ProductSidebarProps) {
                             value={maxPrice}
                             onChange={(e) => {
                                 setMaxPrice(e.target.value);
-                                setPriceRange([priceRange[1] ? priceRange[1] : 0, Number(e.target.value)]);
+                                setPriceRange([priceRange[0] ?? 0, Number(e.target.value)]);
                             }}
                             className="h-9"
                         />

@@ -93,7 +93,7 @@ export function ProductCard({
                     </h3>
                 </Link>
                 <div className="flex items-baseline gap-2 mt-1">
-                    {salePrice ? (
+                    {salePrice && salePrice < price ? (
                         <>
                             <span className="text-sm text-gray-400 line-through font-medium">
                                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)}

@@ -23,6 +23,7 @@ import { useState } from "react"
 import { AppPagination } from "../../../components/app-pagination"
 import { ProductCard } from "./product-card"
 import { ProductSearchForm } from "./product-search-form"
+import { SortSelect } from "@/components/sort-select"
 
 interface ProductListProps {
   productPage: ProductResponse
@@ -56,14 +57,26 @@ export function ProductListPage({ productPage, categories }: ProductListProps) {
             Nhập từ file CSV
           </Button>
         </div>
-        <ToggleGroup type="single" variant={"outline"}>
-          <ToggleGroupItem value="bold" aria-label="Toggle list" onClick={() => setViewMode("list")}>
-            <List /> List
-          </ToggleGroupItem>
-          <ToggleGroupItem value="italic" aria-label="Toggle grid" onClick={() => setViewMode("grid")}>
-            <Grid /> Grid
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex items-center gap-2">
+          <SortSelect
+            options={[
+              { label: "Tên (A-Z)", value: "name_asc" },
+              { label: "Tên (Z-A)", value: "name_desc" },
+              { label: "Giá (Thấp - Cao)", value: "price_asc" },
+              { label: "Giá (Cao - Thấp)", value: "price_desc" },
+              { label: "Mới nhất", value: "lastModifiedDate_desc" },
+              { label: "Cũ nhất", value: "lastModifiedDate_asc" },
+            ]}
+          />
+          <ToggleGroup type="single" variant={"outline"}>
+            <ToggleGroupItem value="bold" aria-label="Toggle list" onClick={() => setViewMode("list")}>
+              <List /> List
+            </ToggleGroupItem>
+            <ToggleGroupItem value="italic" aria-label="Toggle grid" onClick={() => setViewMode("grid")}>
+              <Grid /> Grid
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
       <ProductSearchForm categories={categories} />
       {viewMode === "list" ? (
@@ -180,8 +193,6 @@ export function ProductListPage({ productPage, categories }: ProductListProps) {
               <p className="text-center text-muted-foreground">No products found. Try adjusting your filters.</p>
             </Card>
           )}
-
-
         </div>
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between my-4">

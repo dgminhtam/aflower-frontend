@@ -1,11 +1,8 @@
 import { getCategoriesTree, getProducts } from "@/lib/api";
-import { ProductFilter } from "@/components/products/product-filter";
-import { ProductList } from "@/components/products/product-list";
-import { ProductSidebar } from "@/components/products/product-sidebar";
-import { StorefrontPagination } from "@/components/ui/pagination";
 import { Suspense } from "react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { ProductPageContent } from "@/components/products/product-page-content";
 
 export const metadata = {
     title: "Sản phẩm | AFlower",
@@ -44,13 +41,16 @@ async function ProductsContent({
     const { page = '1', size = '12', sort = '', ...searchFields } = resolvedParams;
     const pageIndex = Math.max(0, Number(page) - 1);
 
+    // Transform sort param from field_dir to field,dir
+    const sortParam = sort ? (sort as string).replace('_', ',') : '';
+
     // Fetch products and categories in parallel
     const [productPage, categories] = await Promise.all([
         getProducts({
             ...searchFields,
             page: String(pageIndex),
             size: String(size),
-            sort: sort as string,
+            sort: sortParam,
         }),
         getCategoriesTree(),
     ]);
@@ -66,24 +66,7 @@ async function ProductsContent({
 
     const categoryList = Array.isArray(categories) ? categories : [];
 
-    return (
-        <div className="flex flex-col lg:flex-row gap-8">
-            <aside className="w-full lg:w-64 shrink-0">
-                <ProductSidebar categories={categoryList} />
-            </aside>
-            <div className="flex-1">
-                <ProductFilter />
-                <ProductList productPage={productPage} />
-
-                <div className="mt-8 flex justify-center">
-                    <StorefrontPagination
-                        totalElements={productPage.totalElements}
-                        itemsPerPage={productPage.size}
-                    />
-                </div>
-            </div>
-        </div>
-    );
+    return <ProductPageContent productPage={productPage} categories={categoryList} />;
 }
 
 function ProductsLoading() {

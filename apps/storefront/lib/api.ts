@@ -8,9 +8,9 @@ async function apiFetch<T>(
     timeoutMs = API_TIMEOUT_MS
 ): Promise<T> {
 
-    const BASE_URL = process.env.API_BASE_URL;
+    const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (!BASE_URL) {
-        throw new Error("Thiếu biến môi trường API_BASE_URL");
+        throw new Error("Thiếu biến môi trường NEXT_PUBLIC_API_BASE_URL");
     }
 
     const controller = new AbortController();
@@ -94,13 +94,17 @@ export const getProducts = (searchParams: SearchParams) => {
 };
 
 export const getCategories = () => {
-    return fetchPublic<any[]>(`/storefront/categories`);
+    return fetchPublic<Category[]>(`/storefront/categories`);
 };
 
 export const getCategoriesTree = () => {
-    return fetchPublic<any[]>(`/storefront/categories/tree`);
+    return fetchPublic<Category[]>(`/storefront/categories/tree`);
 };
 
 export const getRootCategories = () => {
     return fetchPublic<Category[]>("/storefront/categories/root");
+};
+
+export const getProductBySlug = (slug: string) => {
+    return fetchPublic<Product>(`/storefront/products/${slug}`);
 };

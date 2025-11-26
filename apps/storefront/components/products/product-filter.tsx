@@ -2,13 +2,6 @@
 
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@workspace/ui/components/select";
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from "react";
@@ -20,10 +13,8 @@ export function ProductFilter() {
     const [isPending, startTransition] = useTransition();
 
     const defaultName = searchParams.get("name[containsIgnoreCase]") || "";
-    const defaultSort = searchParams.get("sort") || "default";
 
     const [localSearch, setLocalSearch] = useState(defaultName);
-    const [localSort, setLocalSort] = useState(defaultSort);
 
     const handleSearchSubmit = () => {
         const params = new URLSearchParams(searchParams.toString());
@@ -32,12 +23,6 @@ export function ProductFilter() {
             params.set("name[containsIgnoreCase]", localSearch.trim());
         } else {
             params.delete("name[containsIgnoreCase]");
-        }
-
-        if (localSort && localSort !== "default") {
-            params.set("sort", localSort);
-        } else {
-            params.delete("sort");
         }
 
         params.set("page", "1");
@@ -49,11 +34,9 @@ export function ProductFilter() {
 
     const clearFilters = () => {
         setLocalSearch('');
-        setLocalSort('default');
 
         const params = new URLSearchParams(searchParams.toString());
         params.delete("name[containsIgnoreCase]");
-        params.delete("sort");
         params.set("page", "1");
 
         startTransition(() => {
@@ -61,10 +44,10 @@ export function ProductFilter() {
         });
     };
 
-    const hasActiveFilters = localSearch.length > 0 || (localSort !== "default" && localSort.length > 0);
+    const hasActiveFilters = localSearch.length > 0;
 
     return (
-        <div className="mb-8 space-y-4">
+        <div className="flex-1 space-y-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 {/* Search Input */}
                 <div className="relative flex-1 max-w-md">
@@ -84,20 +67,7 @@ export function ProductFilter() {
 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2 items-center">
-                    {/* Sort Select */}
-                    <Select value={localSort} onValueChange={setLocalSort}>
-                        <SelectTrigger className="w-[180px] h-10">
-                            <SelectValue placeholder="Sắp xếp" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="default">Mặc định</SelectItem>
-                            <SelectItem value="price,asc">Giá tăng dần</SelectItem>
-                            <SelectItem value="price,desc">Giá giảm dần</SelectItem>
-                            <SelectItem value="createdAt,desc">Mới nhất</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Button onClick={handleSearchSubmit} disabled={isPending} size="lg">
+                    <Button onClick={handleSearchSubmit} disabled={isPending} size="default" className="h-10">
                         Tìm kiếm
                     </Button>
 
