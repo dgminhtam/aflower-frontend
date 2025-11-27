@@ -2,6 +2,7 @@ import { Quicksand } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { Providers } from "@/components/providers"
+import { CartProvider } from "@/components/cart/cart-context"
 import { ClerkProvider } from '@clerk/nextjs'
 import { shadcn } from '@clerk/themes'
 import { viVN } from '@clerk/localizations'
@@ -27,7 +28,9 @@ export default function RootLayout({
         <body
           className={`${quicksand.variable} font-sans antialiased `}
         >
-          <Providers>{children}</Providers>
+          <Providers>
+            <CartProvider>{children}</CartProvider>
+          </Providers>
         </body>
       </html>
     </ClerkProvider>

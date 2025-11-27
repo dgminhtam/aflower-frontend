@@ -1,9 +1,11 @@
 import { ProductResponse } from "@/lib/definitions"
 import { ProductCard } from "@/components/ui/product-card"
 import { Button } from "@workspace/ui/components/button"
-import { ShoppingBag, Heart, Search } from "lucide-react"
+import { ShoppingBag, Heart, Search, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useCart } from "@/components/cart/cart-context"
+import { useState } from "react"
 
 interface ProductListProps {
     productPage: ProductResponse
@@ -12,6 +14,21 @@ interface ProductListProps {
 
 export function ProductList({ productPage, viewMode = "grid" }: ProductListProps) {
     const products = productPage.content;
+    const { addToCart } = useCart();
+    const [addingId, setAddingId] = useState<number | null>(null);
+
+    const handleAddToCart = async (sku: string, id: number) => {
+        setAddingId(id);
+        try {
+            await addToCart({
+                sku: sku,
+                quantity: 1,
+                description: "Size: Default"
+            });
+        } finally {
+            setAddingId(null);
+        }
+    };
 
     if (products.length === 0) {
         return (
@@ -89,8 +106,16 @@ export function ProductList({ productPage, viewMode = "grid" }: ProductListProps
                             </div>
 
                             <div className="mt-auto flex gap-2">
-                                <Button className="bg-white hover:bg-[#A91B38] text-gray-700 hover:text-white border shadow-sm transition-all">
-                                    <ShoppingBag className="h-4 w-4 mr-2" />
+                                <Button
+                                    className="bg-white hover:bg-[#A91B38] text-gray-700 hover:text-white border shadow-sm transition-all"
+                                    onClick={() => handleAddToCart(product.sku, product.id)}
+                                    disabled={addingId === product.id}
+                                >
+                                    {addingId === product.id ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    ) : (
+                                        <ShoppingBag className="h-4 w-4 mr-2" />
+                                    )}
                                     Thêm vào giỏ
                                 </Button>
                                 <Button variant="outline" size="icon" className="rounded-full">
@@ -113,6 +138,7 @@ export function ProductList({ productPage, viewMode = "grid" }: ProductListProps
                 <ProductCard
                     key={product.id}
                     id={product.id}
+                    sku={product.sku}
                     name={product.name}
                     slug={product.slug}
                     price={product.originPrice}

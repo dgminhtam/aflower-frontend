@@ -1,5 +1,7 @@
 "use client";
 
+import { useCart } from "@/components/cart/cart-context";
+
 import { Product } from "@/lib/definitions";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
@@ -20,10 +22,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
         setQuantity(value);
     };
 
-    const handleAddToCart = () => {
-        // Placeholder logic
-        console.log("Add to cart:", { product, quantity });
-        alert(`Đã thêm ${quantity} sản phẩm "${product.name}" vào giỏ hàng!`);
+    const { addToCart, isLoading } = useCart();
+
+    const handleAddToCart = async () => {
+        await addToCart({
+            sku: product.sku,
+            quantity: quantity,
+            description: `Size: Default` // Placeholder description
+        });
     };
 
     const handleBuyNow = () => {
@@ -55,8 +61,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                                 key={index}
                                 onClick={() => setSelectedImage(img.urlLarge)}
                                 className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-all ${selectedImage === img.urlLarge
-                                        ? "border-primary ring-2 ring-primary ring-offset-2"
-                                        : "border-transparent hover:border-muted-foreground"
+                                    ? "border-primary ring-2 ring-primary ring-offset-2"
+                                    : "border-transparent hover:border-muted-foreground"
                                     }`}
                             >
                                 <Image
@@ -135,6 +141,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                             size="lg"
                             className="flex-1 gap-2 text-base"
                             onClick={handleAddToCart}
+                            disabled={isLoading}
                         >
                             <ShoppingCart className="h-5 w-5" />
                             Thêm vào giỏ hàng

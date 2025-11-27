@@ -4,11 +4,13 @@ import { ProductCard } from "../ui/product-card"
 
 interface Product {
     id: number
+    sku: string
     name: string
     slug: string
     price: number
     image: string
 }
+
 
 interface ProductSectionProps {
     title: string

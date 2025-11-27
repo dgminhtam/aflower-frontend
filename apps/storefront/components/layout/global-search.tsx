@@ -1,5 +1,7 @@
 "use client";
 
+import { useCart } from "@/components/cart/cart-context";
+
 import { getProducts } from "@/lib/api";
 import { Product } from "@/lib/definitions";
 import { Input } from "@workspace/ui/components/input";
@@ -69,12 +71,15 @@ export function GlobalSearch() {
         setIsOpen(false);
     };
 
-    const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    const { addToCart } = useCart();
+
+    const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
         e.preventDefault();
         e.stopPropagation();
-        // Placeholder for Add to Cart logic
-        console.log("Add to cart:", product);
-        alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
+        await addToCart({
+            sku: product.sku,
+            quantity: 1,
+        });
     };
 
     return (

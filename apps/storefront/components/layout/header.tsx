@@ -8,9 +8,12 @@ import { useState } from "react"
 import { UserMenu } from "@/components/user-menu"
 import { CategoryMenu } from "./category-menu"
 import { GlobalSearch } from "./global-search"
+import { useCart } from "@/components/cart/cart-context"
+import { CartSheet } from "@/components/cart/cart-sheet"
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const { cart, setIsOpen } = useCart()
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -57,12 +60,20 @@ export function Header() {
                                 <Search className="h-5 w-5 md:hidden" />
                                 <Heart className="h-5 w-5 hidden md:block" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="relative">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="relative"
+                                onClick={() => setIsOpen(true)}
+                            >
                                 <ShoppingCart className="h-5 w-5" />
-                                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
-                                    0
-                                </span>
+                                {cart?.totalItems ? (
+                                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
+                                        {cart.totalItems}
+                                    </span>
+                                ) : null}
                             </Button>
+                            <CartSheet />
                             <UserMenu />
                         </div>
                     </div>

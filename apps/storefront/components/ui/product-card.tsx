@@ -1,13 +1,16 @@
 "use client"
 
+import { useCart } from "@/components/cart/cart-context"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import { Heart, Search, ShoppingBag } from "lucide-react"
+import { Heart, Loader2, Search, ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 
 export interface ProductCardProps {
     id: number
+    sku: string
     name: string
     slug: string
     price: number
@@ -19,6 +22,8 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({
+    id,
+    sku,
     name,
     slug,
     price,
@@ -28,9 +33,28 @@ export function ProductCard({
     discount,
     className,
 }: ProductCardProps) {
+    const { addToCart } = useCart()
+    const [isAdding, setIsAdding] = useState(false)
+
     // Calculate discount if not provided but salePrice exists
     const discountValue = discount || (salePrice ? Math.round(((price - salePrice) / price) * 100) : 0)
     const currentPrice = salePrice || price
+
+    const handleAddToCart = async (e: React.MouseEvent) => {
+        e.preventDefault() // Prevent navigation if clicked inside Link (though button is absolute)
+        e.stopPropagation()
+
+        setIsAdding(true)
+        try {
+            await addToCart({
+                sku: sku,
+                quantity: 1,
+                description: "Size: Default"
+            })
+        } finally {
+            setIsAdding(false)
+        }
+    }
 
     return (
         <div className={cn("group bg-transparent", className)}>
@@ -76,8 +100,14 @@ export function ProductCard({
                     <Button
                         size="icon-lg"
                         className="rounded-xl bg-white hover:bg-[#A91B38] text-gray-700 hover:text-white shadow-md transition-all"
+                        onClick={handleAddToCart}
+                        disabled={isAdding}
                     >
-                        <ShoppingBag className="h-5 w-5" />
+                        {isAdding ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <ShoppingBag className="h-5 w-5" />
+                        )}
                     </Button>
                 </div>
             </div>

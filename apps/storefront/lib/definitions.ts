@@ -49,3 +49,42 @@ export type ProductResponse = Page<Product>;
 export interface SearchParams {
     [key: string]: string | string[] | undefined;
 }
+
+// Cart Types
+export interface CartEntry {
+    id: number;
+    sku: string;
+    name: string;
+    description?: string;
+    price: number;
+    quantity: number;
+    subTotal: number;
+    imageUrl?: string;
+}
+
+export interface Cart {
+    id: number;
+    email?: string | null;
+    link: string;
+    subTotal: number;
+    grandTotal: number;
+    totalItems: number;
+    entries: CartEntry[];
+    createDate: string;
+    lastModifiedDate: string;
+}
+
+export interface AddToCartRequest {
+    sku: string;
+    quantity: number;
+    description?: string;
+}
+
+export interface UpdateCartEntryRequest {
+    quantity: number;
+}
+
+export interface UpdateCartEmailRequest {
+    email: string;
+}
+

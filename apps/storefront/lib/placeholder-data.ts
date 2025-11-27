@@ -34,6 +34,7 @@ export const CATEGORIES = [
 export const FLASH_SALE_PRODUCTS = [
     {
         id: 1,
+        sku: "SP001",
         name: "Bó hoa hồng đỏ 99 bông",
         slug: "bo-hoa-hong-do-99-bong",
         price: 1500000,
@@ -43,6 +44,7 @@ export const FLASH_SALE_PRODUCTS = [
     },
     {
         id: 2,
+        sku: "SP002",
         name: "Bánh kem dâu tây",
         slug: "banh-kem-dau-tay",
         price: 450000,
@@ -52,6 +54,7 @@ export const FLASH_SALE_PRODUCTS = [
     },
     {
         id: 3,
+        sku: "SP003",
         name: "Giỏ hoa hướng dương",
         slug: "gio-hoa-huong-duong",
         price: 600000,
@@ -61,6 +64,7 @@ export const FLASH_SALE_PRODUCTS = [
     },
     {
         id: 4,
+        sku: "SP004",
         name: "Set quà tặng sinh nhật",
         slug: "set-qua-tang-sinh-nhat",
         price: 800000,
@@ -73,6 +77,7 @@ export const FLASH_SALE_PRODUCTS = [
 export const FEATURED_PRODUCTS = [
     {
         id: 1,
+        sku: "SP005",
         name: "Lẵng hoa chúc mừng",
         slug: "lang-hoa-chuc-mung",
         price: 900000,
@@ -80,6 +85,7 @@ export const FEATURED_PRODUCTS = [
     },
     {
         id: 2,
+        sku: "SP006",
         name: "Bó hoa baby trắng",
         slug: "bo-hoa-baby-trang",
         price: 350000,
@@ -87,6 +93,7 @@ export const FEATURED_PRODUCTS = [
     },
     {
         id: 3,
+        sku: "SP007",
         name: "Bánh Tiramisu",
         slug: "banh-tiramisu",
         price: 400000,
@@ -94,12 +101,14 @@ export const FEATURED_PRODUCTS = [
     },
     {
         id: 4,
+        sku: "SP008",
         name: "Hộp hoa sáp thơm",
         slug: "hop-hoa-sap-thom",
         price: 250000,
         image: "https://pub-385a99dd700a4d468b195ab2a2b2b555.r2.dev/originals/image-3d6e5247-c90a-4196-8243-d3fe2e7df324.png",
     },
 ]
+
 
 export const HERO_SLIDES = [
     {
