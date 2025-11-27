@@ -133,7 +133,7 @@ function NavMain({
               <Collapsible key={item.title} asChild defaultOpen={isActive} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title} isActive={isActive}>
+                    <SidebarMenuButton tooltip={item.title} className="h-10">
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -145,7 +145,7 @@ function NavMain({
                         const isSubItemActive = pathname === subItem.url
                         return (
                           <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild isActive={isSubItemActive}>
+                            <SidebarMenuSubButton asChild isActive={isSubItemActive} className="h-10">
                               <Link href={subItem.url}>{subItem.title}</Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>

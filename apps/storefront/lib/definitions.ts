@@ -88,3 +88,23 @@ export interface UpdateCartEmailRequest {
     email: string;
 }
 
+// Product Collection Types
+export interface ProductCollection {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
+    isFeatured: boolean;
+    image?: Media;
+    status: 'ACTIVE' | 'INACTIVE';
+    createdDate?: string;
+    lastModifiedDate?: string;
+}
+
+export interface ProductCollectionDetailResponse extends ProductCollection {
+    products: Product[];
+}
+

@@ -1,4 +1,4 @@
-import { Category, ProductResponse, SearchParams } from "./definitions";
+import { Category, ProductResponse, SearchParams, Product, Page, ProductCollection, ProductCollectionDetailResponse } from "./definitions";
 
 const API_TIMEOUT_MS = 10000;
 
@@ -107,4 +107,13 @@ export const getRootCategories = () => {
 
 export const getProductBySlug = (slug: string) => {
     return fetchPublic<Product>(`/storefront/products/${slug}`);
+};
+
+export const getProductCollections = (searchParams: SearchParams) => {
+    const queryString = queryParamsToString(searchParams);
+    return fetchPublic<Page<ProductCollection>>(`/storefront/product-collections?${queryString}`);
+};
+
+export const getProductCollectionBySlug = (slug: string) => {
+    return fetchPublic<ProductCollectionDetailResponse>(`/storefront/product-collections/${slug}`);
 };

@@ -22,6 +22,10 @@ export const siteConfig = {
                     title: "Sản phẩm",
                     url: "/products",
                 },
+                {
+                    title: "Bộ sưu tập",
+                    url: "/product-collections",
+                },
             ],
         },
         {
