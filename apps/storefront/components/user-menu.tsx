@@ -39,15 +39,16 @@ export function UserMenu() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative rounded-full">
+                <Button variant="ghost" size="icon">
+                    <UserIcon />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={user.imageUrl} alt={user.fullName || ""} />
                         <AvatarFallback>{userInitials}</AvatarFallback>
                     </Avatar>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user.fullName}</p>
                         <p className="text-xs leading-none text-muted-foreground">

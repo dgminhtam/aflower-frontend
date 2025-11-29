@@ -30,6 +30,7 @@ export interface MultiSelectOption {
   value: string
   label: string
   children?: MultiSelectOption[]
+  disabled?: boolean
 }
 
 interface MultiSelectComboboxBaseProps {
@@ -235,10 +236,18 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
             {/* CommandItem chỉ dùng để Select */}
             <CommandItem
               value={option.label} // Hack: Dùng label làm value để cmdk search mặc định hoạt động nếu muốn, nhưng ở đây ta đã manual filter
-              onSelect={() => handleSelect(option.value)}
-              className="flex-1 flex items-center justify-between cursor-pointer aria-selected:bg-accent"
+              onSelect={() => {
+                if (!option.disabled) {
+                  handleSelect(option.value)
+                }
+              }}
+              disabled={option.disabled}
+              className={cn(
+                "flex-1 flex items-center justify-between cursor-pointer aria-selected:bg-accent",
+                option.disabled && "cursor-not-allowed opacity-50"
+              )}
             >
-              <span className={cn("truncate", depth > 0 && !hasChildren && "text-muted-foreground")}>
+              <span className="truncate">
                 {option.label}
               </span>
               <Check
@@ -308,8 +317,7 @@ export const MultiSelectCombobox = (props: MultiSelectComboboxProps) => {
           role="combobox"
           aria-expanded={open}
           className={cn(
-            'w-full justify-between px-3',
-            props.mode === 'single' ? 'h-10' : 'h-auto min-h-10 py-1',
+            'w-full justify-between px-3 h-9',
             error && 'border-destructive focus-visible:ring-destructive',
             className
           )}

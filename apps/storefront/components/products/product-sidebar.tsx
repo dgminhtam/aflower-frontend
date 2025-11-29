@@ -273,7 +273,7 @@ function CategoryTreeItem({
                 />
                 <Label
                     htmlFor={`category-${category.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                    className="text-md font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
                 >
                     {category.name}
                 </Label>

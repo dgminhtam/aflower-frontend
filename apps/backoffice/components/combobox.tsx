@@ -25,6 +25,7 @@ export interface ComboboxOption {
 
 interface StatusComboboxProps {
     options: readonly ComboboxOption[]
+    value?: string
     defaultValue?: string | undefined
     onChange: (valueChange: string) => void
     disabled?: boolean
@@ -35,6 +36,7 @@ interface StatusComboboxProps {
 
 export function Combobox({
     options,
+    value: controlledValue,
     defaultValue,
     onChange,
     disabled,
@@ -42,11 +44,15 @@ export function Combobox({
     className,
 }: StatusComboboxProps) {
     const [open, setOpen] = React.useState(false)
-    const [value, setValue] = React.useState(defaultValue ?? "")
+    const [value, setValue] = React.useState(controlledValue ?? defaultValue ?? "")
 
     React.useEffect(() => {
-        if (defaultValue !== undefined) setValue(defaultValue)
-    }, [defaultValue])
+        if (controlledValue !== undefined) {
+            setValue(controlledValue)
+        } else if (defaultValue !== undefined) {
+            setValue(defaultValue)
+        }
+    }, [controlledValue, defaultValue])
 
     const handleSelect = (currentValue: string) => {
         const newValue = currentValue === value ? "" : currentValue
@@ -65,7 +71,7 @@ export function Combobox({
                     role="combobox"
                     aria-expanded={open}
                     disabled={disabled}
-                    className={cn("w-[200px] justify-between", className)}
+                    className={cn("w-full h-9 justify-between", className)}
                 >
                     {selectedLabel ? (
                         <span>{selectedLabel}</span>
@@ -75,7 +81,7 @@ export function Combobox({
                     <ChevronsUpDown className="opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="min-w-sm p-0">
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                 <Command>
                     <CommandList>
                         <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>

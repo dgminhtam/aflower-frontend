@@ -10,16 +10,22 @@ import {
 } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { CategoryImportDialog } from "./category-import-dialog";
 
 export default function Page() {
   return (
     <Card>
       {/* Static Header - Hiển thị ngay lập tức */}
       <CardHeader>
-        <CardTitle>Danh mục</CardTitle>
-        <CardDescription>Quản lý toàn bộ cấu trúc danh mục sản phẩm</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Danh mục</CardTitle>
+            <CardDescription>Quản lý toàn bộ cấu trúc danh mục sản phẩm</CardDescription>
+          </div>
+          <CategoryImportDialog />
+        </div>
       </CardHeader>
-      
+
       <Separator />
 
       {/* Loading State với Skeleton Tree */}
@@ -33,7 +39,7 @@ export default function Page() {
 // --- Component Fetch Data ---
 async function FetchCategoryTree() {
   const categoryTree = await getCategoryTree();
-  
+
   return (
     <CardContent>
       <CategoryTree categoryTree={categoryTree} />
@@ -47,8 +53,8 @@ function CategoryTreeSkeleton() {
     <CardContent className="pt-6 space-y-4">
       {/* Giả lập Search bar hoặc Filter toolbar */}
       <div className="flex items-center justify-between gap-4 mb-6">
-         <Skeleton className="h-10 w-full max-w-sm" /> {/* Search input */}
-         <Skeleton className="h-10 w-24" /> {/* Filter button */}
+        <Skeleton className="h-10 w-full max-w-sm" /> {/* Search input */}
+        <Skeleton className="h-10 w-24" /> {/* Filter button */}
       </div>
 
       {/* Giả lập các dòng trong cây danh mục */}

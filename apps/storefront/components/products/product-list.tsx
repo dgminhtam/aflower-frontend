@@ -82,27 +82,19 @@ export function ProductList({ productPage, viewMode = "grid" }: ProductListProps
                             <div className="text-[10px] font-bold text-[#A91B38] uppercase tracking-wider mb-1">
                                 {product.categories?.[0]?.name || "HOA TƯƠI"}
                             </div>
-                            <Link href={`/products/${product.slug}`} className="block mb-2">
+                            <Link href={`/products/${product.sku}`} className="block mb-2">
                                 <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#A91B38] transition-colors line-clamp-2">
                                     {product.name}
                                 </h3>
                             </Link>
 
                             <div className="flex items-baseline gap-2 mb-4">
-                                {product.price < product.originPrice ? (
-                                    <>
-                                        <span className="text-sm text-gray-400 line-through font-medium">
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.originPrice)}
-                                        </span>
-                                        <span className="text-xl font-bold text-[#A91B38]">
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span className="text-xl font-bold text-[#A91B38]">
-                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.originPrice)}
-                                    </span>
-                                )}
+                                <span className="text-sm text-gray-400 line-through font-medium">
+                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.originPrice)}
+                                </span>
+                                <span className="text-xl font-bold text-[#A91B38]">
+                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+                                </span>
                             </div>
 
                             <div className="mt-auto flex gap-2">

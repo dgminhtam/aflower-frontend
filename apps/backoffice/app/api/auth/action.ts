@@ -2,7 +2,7 @@
 
 import { auth } from '@clerk/nextjs/server';
 
-const API_TIMEOUT_MS = 10000;
+const API_TIMEOUT_MS = 60000;
 
 async function apiFetch<T>(
   urlPath: string,

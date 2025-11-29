@@ -1,17 +1,18 @@
 import { ProductDetail } from "@/components/products/product-detail";
-import { getProductBySlug } from "@/lib/api";
+import { getProductBySku } from "@/lib/api";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 interface ProductPageProps {
-    params: {
-        slug: string;
-    };
+    params: Promise<{
+        sku: string;
+    }>;
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
     try {
-        const product = await getProductBySlug(params.slug);
+        const { sku } = await params;
+        const product = await getProductBySku(sku);
         if (!product) {
             return {
                 title: "Sản phẩm không tồn tại",
@@ -34,7 +35,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductPage({ params }: ProductPageProps) {
     let product;
     try {
-        product = await getProductBySlug(params.slug);
+        const { sku } = await params;
+        product = await getProductBySku(sku);
     } catch (error) {
         console.error("Error fetching product:", error);
     }

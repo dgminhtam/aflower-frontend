@@ -12,6 +12,10 @@ const quicksand = Quicksand({
   variable: "--font-sans",
 })
 
+import { Header } from "@/components/layout/header"
+
+// ... imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +33,10 @@ export default function RootLayout({
           className={`${quicksand.variable} font-sans antialiased `}
         >
           <Providers>
-            <CartProvider>{children}</CartProvider>
+            <CartProvider>
+              <Header />
+              {children}
+            </CartProvider>
           </Providers>
         </body>
       </html>

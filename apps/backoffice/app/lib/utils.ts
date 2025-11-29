@@ -4,7 +4,7 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
-    
+
   }).format(amount);
 }
 
@@ -123,13 +123,42 @@ export const buildFilterQuery = (searchFields: { [key: string]: string | string[
   const query: string[] = [];
 
   Object.entries(searchFields).forEach(([key, value]) => {
-    const matches = key.match(/^([\w\.]+)\[(\w+)\]$/);
+    // Check if the key contains multiple fields separated by comma (for OR logic)
+    // e.g. "name[containsIgnoreCase],sku[eq]"
+    const parts = key.split(',');
 
-    if (matches) {
-      const field = matches[1];
-      const operator = matches[2];
-      if (field && operator && value !== undefined && value !== '') {
-        query.push(convertSearchCondition(field, operator, value));
+    if (parts.length > 1) {
+      // Handle OR logic group
+      const orConditions: string[] = [];
+
+      parts.forEach(part => {
+        const matches = part.match(/^([\w\.]+)\[(\w+)\]$/);
+        if (matches) {
+          const field = matches[1];
+          const operator = matches[2];
+          if (field && operator && value !== undefined && value !== '') {
+            try {
+              orConditions.push(convertSearchCondition(field, operator, value));
+            } catch (e) {
+              // Ignore unsupported operators or errors in individual parts
+            }
+          }
+        }
+      });
+
+      if (orConditions.length > 0) {
+        query.push(`(${orConditions.join(' or ')})`);
+      }
+    } else {
+      // Handle single field (existing logic)
+      const matches = key.match(/^([\w\.]+)\[(\w+)\]$/);
+
+      if (matches) {
+        const field = matches[1];
+        const operator = matches[2];
+        if (field && operator && value !== undefined && value !== '') {
+          query.push(convertSearchCondition(field, operator, value));
+        }
       }
     }
   });

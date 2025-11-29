@@ -34,7 +34,8 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
     const [isPending, startTransition] = useTransition();
     const categoryOptions = convertCategoriesToMultiSelectOptions(categories);
 
-    const defaultName = searchParams.get("name[containsIgnoreCase]") || "";
+    const SEARCH_KEY = "name[containsIgnoreCase],sku[eq]";
+    const defaultName = searchParams.get(SEARCH_KEY) || "";
     const defaultStatus = searchParams.get("status[eq]") || "";
     const defaultCategory = searchParams.get("categories.id[in]")?.split(",") || [];
 
@@ -46,9 +47,12 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         const params = new URLSearchParams(searchParams.toString());
 
         if (localSearch.trim()) {
-            params.set("name[containsIgnoreCase]", localSearch.trim());
-            params.set("sku[eq]", localSearch.trim());
+            params.set(SEARCH_KEY, localSearch.trim());
+            // Remove old keys if they exist
+            params.delete("name[containsIgnoreCase]");
+            params.delete("sku[eq]");
         } else {
+            params.delete(SEARCH_KEY);
             params.delete("name[containsIgnoreCase]");
             params.delete("sku[eq]");
         }
@@ -78,6 +82,7 @@ export function ProductSearchForm({ categories }: ProductSearchFormProps) {
         setLocalCategory([]);
 
         const params = new URLSearchParams(searchParams.toString());
+        params.delete(SEARCH_KEY);
         params.delete("name[containsIgnoreCase]");
         params.delete("sku[eq]");
         params.delete("status[eq]");

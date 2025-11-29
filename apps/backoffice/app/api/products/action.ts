@@ -26,3 +26,10 @@ export const updateProduct = (id: number, request: UpdateProductRequest): Promis
   },
   body: JSON.stringify(request),
 });
+
+export const importProducts = async (formData: FormData): Promise<void> => {
+  await fetchAuthenticated<void>("/products/import", {
+    method: "POST",
+    body: formData,
+  });
+};

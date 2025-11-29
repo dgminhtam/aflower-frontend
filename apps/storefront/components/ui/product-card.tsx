@@ -3,10 +3,11 @@
 import { useCart } from "@/components/cart/cart-context"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import { Heart, Loader2, Search, ShoppingBag } from "lucide-react"
+import { Heart, Search, ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
+import { Spinner } from "@workspace/ui/components/spinner"
 
 export interface ProductCardProps {
     id: number
@@ -86,13 +87,15 @@ export function ProductCard({
                     </Button>
 
                     {/* Quick View */}
-                    <Button
-                        size="icon-lg"
-                        variant="secondary"
-                        className="rounded-full bg-white/60 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#A91B38] shadow-sm transition-colors"
-                    >
-                        <Search className="h-5 w-5" />
-                    </Button>
+                    <Link href={`/products/${sku}`}>
+                        <Button
+                            size="icon-lg"
+                            variant="secondary"
+                            className="rounded-full bg-white/60 backdrop-blur-sm hover:bg-white text-gray-700 hover:text-[#A91B38] shadow-sm transition-colors"
+                        >
+                            <Search className="h-5 w-5" />
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Add to Cart - Bottom Right */}
@@ -104,9 +107,9 @@ export function ProductCard({
                         disabled={isAdding}
                     >
                         {isAdding ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <Spinner />
                         ) : (
-                            <ShoppingBag className="h-5 w-5" />
+                            <ShoppingBag />
                         )}
                     </Button>
                 </div>
@@ -117,7 +120,7 @@ export function ProductCard({
                 <div className="text-[10px] font-bold text-[#A91B38] uppercase tracking-wider">
                     {category}
                 </div>
-                <Link href={`/products/${slug}`} className="block">
+                <Link href={`/products/${sku}`} className="block">
                     <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#A91B38] transition-colors line-clamp-2">
                         {name}
                     </h3>

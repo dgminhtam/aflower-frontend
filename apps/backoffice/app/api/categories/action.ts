@@ -101,3 +101,10 @@ export async function deleteCategoryById(id: number): Promise<Category> {
     method: "DELETE"
   });
 }
+
+export async function importCategories(formData: FormData): Promise<void> {
+  await fetchAuthenticated<void>("/categories/import", {
+    method: "POST",
+    body: formData,
+  });
+}

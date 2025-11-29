@@ -4,13 +4,13 @@ import { FlashSaleBanner } from "@/components/home/flash-sale-banner"
 import { HeroSection } from "@/components/home/hero-section"
 import { ProductSection } from "@/components/home/product-section"
 import { Footer } from "@/components/layout/footer"
-import { Header } from "@/components/layout/header"
+
 import { FEATURED_PRODUCTS } from "@/lib/placeholder-data"
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+
 
       <main className="flex-1">
         <HeroSection />

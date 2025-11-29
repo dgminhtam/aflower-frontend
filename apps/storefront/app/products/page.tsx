@@ -1,6 +1,6 @@
 import { getCategoriesTree, getProducts } from "@/lib/api";
 import { Suspense } from "react";
-import { Header } from "@/components/layout/header";
+
 import { Footer } from "@/components/layout/footer";
 import { ProductPageContent } from "@/components/products/product-page-content";
 
@@ -16,7 +16,7 @@ interface ProductsPageProps {
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
     return (
         <div className="min-h-screen flex flex-col">
-            <Header />
+
             <main className="flex-1 container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Tất cả sản phẩm</h1>

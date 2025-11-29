@@ -14,8 +14,7 @@ import {
   Grid,
   List,
   Plus,
-  Trash2,
-  Upload
+  Trash2
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -24,6 +23,7 @@ import { AppPagination } from "../../../components/app-pagination"
 import { ProductCard } from "./product-card"
 import { ProductSearchForm } from "./product-search-form"
 import { SortSelect } from "@/components/sort-select"
+import { ProductImportDialog } from "./product-import-dialog"
 
 interface ProductListProps {
   productPage: ProductResponse
@@ -52,10 +52,7 @@ export function ProductListPage({ productPage, categories }: ProductListProps) {
           <Button asChild>
             <Link href="/products/create" ><Plus /> Tạo sản phẩm mới</Link>
           </Button>
-          <Button variant={"outline"}>
-            <Upload />
-            Nhập từ file CSV
-          </Button>
+          <ProductImportDialog />
         </div>
         <div className="flex items-center gap-2">
           <SortSelect

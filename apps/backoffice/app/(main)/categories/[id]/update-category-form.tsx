@@ -51,7 +51,7 @@ interface UpdateCategoryFormProps {
 
 function UpdateCategoryForm({ categoryId, initialData, categories = [] }: UpdateCategoryFormProps) {
   const router = useRouter()
-  const categoryOptions = React.useMemo(() => convertCategoriesToMultiSelectOptions(categories), [categories]);
+  const categoryOptions = React.useMemo(() => convertCategoriesToMultiSelectOptions(categories, categoryId), [categories, categoryId]);
   const form = useForm<UpdateCategoryRequest>({
     resolver: zodResolver(updateCategorySchema),
     defaultValues: {

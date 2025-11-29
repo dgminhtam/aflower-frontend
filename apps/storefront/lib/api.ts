@@ -109,6 +109,10 @@ export const getProductBySlug = (slug: string) => {
     return fetchPublic<Product>(`/storefront/products/${slug}`);
 };
 
+export const getProductBySku = (sku: string) => {
+    return fetchPublic<Product>(`/storefront/products/${sku}`);
+};
+
 export const getProductCollections = (searchParams: SearchParams) => {
     const queryString = queryParamsToString(searchParams);
     return fetchPublic<Page<ProductCollection>>(`/storefront/product-collections?${queryString}`);

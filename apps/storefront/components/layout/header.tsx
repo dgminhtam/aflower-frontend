@@ -2,7 +2,7 @@
 
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
-import { Search, ShoppingCart, Menu, Heart } from "lucide-react"
+import { Search, ShoppingCart, Menu, Heart, ShoppingBag, ShoppingBagIcon } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { UserMenu } from "@/components/user-menu"
@@ -66,7 +66,7 @@ export function Header() {
                                 className="relative"
                                 onClick={() => setIsOpen(true)}
                             >
-                                <ShoppingCart className="h-5 w-5" />
+                                <ShoppingBag />
                                 {cart?.totalItems ? (
                                     <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
                                         {cart.totalItems}

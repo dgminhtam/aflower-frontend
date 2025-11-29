@@ -1,5 +1,5 @@
 import { getProductCollectionBySlug } from "@/lib/api";
-import { Header } from "@/components/layout/header";
+
 import { Footer } from "@/components/layout/footer";
 import { ProductCard } from "@/components/ui/product-card";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -15,7 +15,7 @@ export default async function Page({ params }: PageProps) {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <Header />
+
             <main className="flex-1">
                 {/* Collection Banner */}
                 {collection.image && (
@@ -59,7 +59,35 @@ export default async function Page({ params }: PageProps) {
                     {collection.products.length > 0 ? (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {collection.products.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard
+                                    key={product.id}
+                                    id={product.id}
+                                    sku={product.sku}
+                                    name={product.name}
+                                    slug={product.slug}
+                                    price={product.price}
+                                    salePrice={product.originPrice > product.price ? product.price : undefined} // Assuming price is sale price if lower than origin
+                                    // Note: API might return different fields. Let's check Product type if possible, but for now map common fields.
+                                    // Actually, looking at ProductDetail, product.price seems to be the current price.
+                                    // And originPrice is the original price.
+                                    // ProductCard expects 'price' as original/regular price and 'salePrice' as discounted price?
+                                    // Let's re-read ProductCard logic:
+                                    // const discountValue = discount || (salePrice ? Math.round(((price - salePrice) / price) * 100) : 0)
+                                    // const currentPrice = salePrice || price
+                                    // So 'price' is the base price (originPrice), and 'salePrice' is the actual selling price (price) IF it's lower.
+                                    // Wait, usually 'price' in DB is selling price.
+                                    // Let's look at ProductDetail again:
+                                    // {new Intl.NumberFormat("vi-VN", ...).format(product.price)}
+                                    // {product.originPrice > product.price && ... format(product.originPrice)}
+                                    // So product.price is the CURRENT selling price. product.originPrice is the higher original price.
+                                    // ProductCard logic:
+                                    // if salePrice < price -> show salePrice (big) and price (crossed out).
+                                    // So we should pass:
+                                    // price={product.originPrice || product.price}
+                                    // salePrice={product.originPrice > product.price ? product.price : undefined}
+                                    image={product.image?.urlMedium || product.image?.url || "/placeholder.png"}
+                                    category={product.category?.name}
+                                />
                             ))}
                         </div>
                     ) : (

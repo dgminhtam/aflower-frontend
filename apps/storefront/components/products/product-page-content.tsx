@@ -1,12 +1,13 @@
 "use client"
 
-import { Category, ProductResponse } from "@/lib/definitions"
 import { ProductFilter } from "@/components/products/product-filter"
 import { ProductList } from "@/components/products/product-list"
 import { ProductSidebar } from "@/components/products/product-sidebar"
 import { SortSelect } from "@/components/sort-select"
 import { StorefrontPagination } from "@/components/ui/pagination"
+import { Category, ProductResponse } from "@/lib/definitions"
 import { Button } from "@workspace/ui/components/button"
+import { ButtonGroup } from "@workspace/ui/components/button-group"
 import { cn } from "@workspace/ui/lib/utils"
 import { Grid, List } from "lucide-react"
 import { useState } from "react"
@@ -38,24 +39,16 @@ export function ProductPageContent({ productPage, categories }: ProductPageConte
                                 { label: "Cũ nhất", value: "lastModifiedDate_asc" },
                             ]}
                         />
-                        <div className="flex items-center border rounded-md bg-background">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn("rounded-none rounded-l-md h-10 w-10", viewMode === "grid" && "bg-muted")}
-                                onClick={() => setViewMode("grid")}
-                            >
-                                <Grid className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn("rounded-none rounded-r-md h-10 w-10", viewMode === "list" && "bg-muted")}
-                                onClick={() => setViewMode("list")}
-                            >
-                                <List className="h-4 w-4" />
-                            </Button>
-                        </div>
+                        <ButtonGroup aria-label="Button group">
+                            <Button variant="outline"
+                                size={"icon"}
+                                className={cn("rounded-none rounded-l-md w-10", viewMode === "grid" && "bg-muted")}
+                                onClick={() => setViewMode("grid")}><Grid /></Button>
+                            <Button variant="outline"
+                                size={"icon"}
+                                className={cn("rounded-none rounded-r-md w-10", viewMode === "list" && "bg-muted")}
+                                onClick={() => setViewMode("list")}><List /></Button>
+                        </ButtonGroup>
                     </div>
                 </div>
                 <ProductList productPage={productPage} viewMode={viewMode} />

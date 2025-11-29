@@ -43,8 +43,8 @@ export function SortSelect({
 
     return (
         <Select value={currentSort} onValueChange={onSortChange}>
-            <SelectTrigger className="w-[180px] h-10">
-                <SelectValue placeholder={placeholder} />
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={placeholder} className="h-10" />
             </SelectTrigger>
             <SelectContent>
                 {options.map((option) => (
