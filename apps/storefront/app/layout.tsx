@@ -16,6 +16,10 @@ import { Header } from "@/components/layout/header"
 
 // ... imports
 
+import { StorefrontBreadcrumb } from "@/components/storefront-breadcrumb"
+
+// ... imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,6 +39,7 @@ export default function RootLayout({
           <Providers>
             <CartProvider>
               <Header />
+              <StorefrontBreadcrumb />
               {children}
             </CartProvider>
           </Providers>

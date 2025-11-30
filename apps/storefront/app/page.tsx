@@ -3,6 +3,7 @@ import { FeatureBar } from "@/components/home/feature-bar"
 import { FlashSaleBanner } from "@/components/home/flash-sale-banner"
 import { HeroSection } from "@/components/home/hero-section"
 import { ProductSection } from "@/components/home/product-section"
+import { SaleSection } from "@/components/home/sale-section"
 import { Footer } from "@/components/layout/footer"
 
 import { FEATURED_PRODUCTS } from "@/lib/placeholder-data"
@@ -16,6 +17,7 @@ export default function Home() {
         <HeroSection />
         <FeatureBar />
         <CategoryGrid />
+        <SaleSection />
         <FlashSaleBanner />
 
         <ProductSection

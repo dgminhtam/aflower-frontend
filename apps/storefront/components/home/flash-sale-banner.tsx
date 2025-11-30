@@ -1,46 +1,65 @@
 "use client"
 
 import { Button } from "@workspace/ui/components/button"
-import { FLASH_SALE_PRODUCTS } from "@/lib/placeholder-data"
-import { Timer } from "lucide-react"
-import { ProductCard } from "../ui/product-card"
+import { Tag } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
 export function FlashSaleBanner() {
     return (
-        <section className="py-16 bg-gradient-to-r from-red-500 to-pink-600 text-white relative overflow-hidden">
-            {/* Decorative Background Elements */}
-            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-white blur-3xl" />
-                <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-white blur-3xl" />
-            </div>
+        <section className="container mx-auto px-4 py-12">
+            <div className="relative bg-[#990A2C] rounded-[20px] overflow-hidden flex flex-col md:flex-row items-center justify-between min-h-[160px] md:px-12 py-8 md:py-0 gap-8">
 
-            <div className="container mx-auto px-4 relative z-10">
-                <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-white text-red-600 p-2 rounded-lg shadow-lg rotate-[-5deg]">
-                            <span className="text-2xl font-black uppercase">Flash Sale</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm">
-                            <Timer className="h-5 w-5 animate-pulse" />
-                            <span className="font-mono font-bold text-xl">02 : 15 : 45</span>
+                {/* Left: Flash Sale Label */}
+                <div className="flex items-center gap-4 z-10">
+                    <div className="relative">
+                        <Tag className="w-16 h-16 text-[#FFB800] fill-[#FFB800] rotate-90" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#990A2C] rounded-full" />
+                    </div>
+                    <div className="flex flex-col leading-none">
+                        <span className="text-[#FFB800] font-bold text-3xl tracking-wider">FLASH</span>
+                        <span className="text-[#FFB800] font-bold text-3xl tracking-wider">SALE</span>
+                    </div>
+                    <div className="flex items-center ml-4">
+                        <span className="text-white font-bold text-6xl">20</span>
+                        <div className="flex flex-col justify-center ml-1">
+                            <span className="text-[#FFB800] font-bold text-2xl leading-none">%</span>
+                            <span className="text-[#FFB800] font-bold text-xl leading-none">OFF</span>
                         </div>
                     </div>
-                    <Button variant="secondary" className="rounded-full px-6 font-semibold shadow-lg hover:scale-105 transition-transform">
-                        Xem tất cả
+                </div>
+
+                {/* Center: Rose Image */}
+                {/* We use absolute positioning on desktop to make it overlap/pop out if needed, or just flex */}
+                <div className="relative w-48 h-48 md:w-64 md:h-64 shrink-0 md:-my-10 z-20">
+                    <Image
+                        src={"/flower_scroll.webp"}
+                        alt="Rose"
+                        fill
+                        className="object-contain drop-shadow-2xl"
+                    />
+                </div>
+
+                {/* Right: Text & CTA */}
+                <div className="flex flex-col md:flex-row items-center gap-6 z-10 text-center md:text-left">
+                    <div className="text-white">
+                        <h3 className="font-bold text-xl mb-1">Tất cả sản phẩm hoa</h3>
+                        <p className="text-white/90 text-sm">
+                            Nhập <span className="font-bold text-white">20FIORE</span> trong giỏ hàng để nhận ưu đãi.
+                        </p>
+                    </div>
+                    <Button
+                        className="bg-white text-[#990A2C] hover:bg-gray-100 font-bold rounded-full px-8 py-6"
+                        asChild
+                    >
+                        <Link href="/products">
+                            TỚI CỬA HÀNG
+                        </Link>
                     </Button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {FLASH_SALE_PRODUCTS.map((product) => (
-                        <div key={product.id} className="bg-white rounded-2xl p-3 shadow-lg hover:-translate-y-1 transition-transform duration-300">
-                            <ProductCard
-                                {...product}
-                                category="FLASH SALE"
-                                className="h-full"
-                            />
-                        </div>
-                    ))}
-                </div>
+                {/* Decorative Background Pattern */}
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/20 to-transparent pointer-events-none" />
             </div>
         </section>
     )

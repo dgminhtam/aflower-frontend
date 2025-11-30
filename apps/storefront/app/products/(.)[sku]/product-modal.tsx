@@ -19,11 +19,11 @@ export function ProductModal({ product }: { product: Product }) {
 
     return (
         <Drawer open={open} onOpenChange={handleOpenChange}>
-            <DrawerContent className="max-h-[90vh] overflow-y-auto">
+            <DrawerContent className="h-[calc(100vh-5rem)]">
                 <div className="sr-only">
                     <DrawerTitle>{product.name}</DrawerTitle>
                 </div>
-                <div className="container mx-auto px-4 py-6">
+                <div className="container mx-auto px-4 py-6 flex-1 overflow-y-auto">
                     <ProductDetail product={product} />
                 </div>
             </DrawerContent>
