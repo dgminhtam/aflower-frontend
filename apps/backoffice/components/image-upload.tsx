@@ -12,8 +12,8 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { MediaSelector } from "./media-selector"
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
+const MAX_FILE_SIZE = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_SIZE) || 5 * 1024 * 1024
+const ALLOWED_TYPES = process.env.NEXT_PUBLIC_UPLOAD_ALLOWED_TYPES?.split(",") || ["image/png", "image/jpeg", "image/webp"]
 
 interface ImageUploadProps {
   value?: number | null
