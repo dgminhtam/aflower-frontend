@@ -18,25 +18,25 @@ import { Separator } from "@workspace/ui/components/separator"
 import { Spinner } from "@workspace/ui/components/spinner"
 
 // Import Defs
-import { updateProduct } from "@/app/api/products/action"; // Giả định bạn có hàm này
+import { updateProduct } from "@/app/api/products/action";
 import { Category } from "@/app/lib/categories/definitions"
 import { Product, STATUS_VALUES } from "@/app/lib/products/definitions"
 import { convertCategoriesToMultiSelectOptions } from "@/app/lib/products/utils"
 import { GalleryUpload } from "@/components/gallery-upload"
+import { AlternativeProductsManager } from "./alternative-products-manager"
 
 // --- SCHEMA ---
-// Với Update, đôi khi ta không bắt buộc validation chặt như Create, nhưng giữ nguyên cũng tốt.
 export const updateProductSchema = z.object({
   name: z.string().min(1, "Tên không được để trống").max(255),
   sku: z.string().min(1, "SKU không được để trống").max(255),
-  slug: z.string().min(1, "Slug không được để trống").max(255) // Tăng max lên, 50 hơi ngắn cho SEO
+  slug: z.string().min(1, "Slug không được để trống").max(255)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug không hợp lệ (chỉ chứa chữ thường, số, gạch ngang)"),
-  description: z.string().min(1, "Mô tả không được để trống").max(2000), // Tăng max mô tả lên
+  description: z.string().min(1, "Mô tả không được để trống").max(2000),
   price: z.number().optional(),
   originPrice: z.number().optional(),
   status: z.enum(STATUS_VALUES),
   categoryIds: z.array(z.number()).min(1, "Chọn ít nhất 1 danh mục"),
-  imageId: z.number().nullable(), // Cho phép null nếu xóa ảnh
+  imageId: z.number().nullable(),
   gallery: z.array(z.number()).optional(),
 });
 
@@ -57,7 +57,6 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
 
   const form = useForm<UpdateProductRequest>({
     resolver: zodResolver(updateProductSchema),
-    // Dùng defaultValues an toàn với toán tử ?. và ??
     defaultValues: {
       name: product.name,
       sku: product.sku,
@@ -67,7 +66,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
       originPrice: product.originPrice,
       status: product.status as typeof STATUS_VALUES[number],
       categoryIds: product.categories?.map((c) => c.id) || [],
-      imageId: product.image?.id ?? null, // FIX: Tránh crash nếu product chưa có ảnh
+      imageId: product.image?.id ?? null,
       gallery: product.gallery?.map((c) => c.id) || [],
     },
   })
@@ -77,13 +76,11 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
   const slugValue = form.watch("slug")
 
   useEffect(() => {
-    // Logic: Chỉ auto-generate slug khi slug đang TRỐNG.
-    // Không đổi slug khi đang edit tên sản phẩm cũ để bảo vệ SEO.
     if (nameValue && !slugValue) {
       const generatedSlug = nameValue
         .toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Bỏ dấu tiếng Việt
-        .replace(/đ/g, "d").replace(/Đ/g, "D") // Xử lý chữ đ
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d").replace(/Đ/g, "D")
         .replace(/\s+/g, "-")
         .replace(/[^\w-]/g, "")
       form.setValue("slug", generatedSlug, { shouldValidate: true })
@@ -93,17 +90,12 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
   // --- SUBMIT ---
   async function onSubmit(data: UpdateProductRequest) {
     try {
-      // Gọi API Update (truyền thêm ID sản phẩm)
       await updateProduct(product.id, data);
       console.log("Updating:", { id: product.id, ...data });
 
-      // Giả lập delay
       await new Promise(r => setTimeout(r, 1000));
 
       toast.success("Cập nhật sản phẩm thành công")
-
-      // KHÔNG reset form về rỗng ở trang Update.
-      // Cập nhật lại defaultValues để nút "Reset" (nếu có) hoạt động đúng với dữ liệu mới
       form.reset(data);
 
     } catch (error) {
@@ -281,9 +273,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel>Ảnh đại diện</FieldLabel>
             <ImageUpload
-              value={field.value} // Chỉ truyền ID
-              // Cần xử lý hiển thị ảnh cũ nếu field.value == initial.id
-              // Hoặc component ImageUpload của bạn tự handle việc hiển thị dựa trên initialMedia
+              value={field.value}
               initialMedia={product.image}
               onChange={field.onChange}
             />
@@ -292,7 +282,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
         )}
       />
 
-      {/* Thư viện ảnh (Đã tối ưu) */}
+      {/* Thư viện ảnh */}
       <Controller
         name="gallery"
         control={form.control}
@@ -310,6 +300,13 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
 
       <Separator />
 
+      <AlternativeProductsManager
+        productId={product.id}
+        initialAlternatives={product.alternativeProducts || []}
+      />
+
+      <Separator />
+
       <div className="flex gap-4">
         <Button disabled={form.formState.isSubmitting} type="submit">
           {form.formState.isSubmitting ? (
@@ -320,7 +317,7 @@ export function UpdateProductForm({ categories, product }: UpdateProductFormProp
         <Button
           type="button"
           variant="outline"
-          onClick={() => window.history.back()} // Nút hủy quay lại trang trước
+          onClick={() => window.history.back()}
         >
           Quay lại
         </Button>

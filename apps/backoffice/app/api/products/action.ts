@@ -33,3 +33,13 @@ export const importProducts = async (formData: FormData): Promise<void> => {
     body: formData,
   });
 };
+
+export const addAlternativeProduct = (id: number, alternativeId: number): Promise<void> =>
+  fetchAuthenticated<void>(`/products/${id}/alternatives/${alternativeId}`, {
+    method: "POST",
+  });
+
+export const removeAlternativeProduct = (id: number, alternativeId: number): Promise<void> =>
+  fetchAuthenticated<void>(`/products/${id}/alternatives/${alternativeId}`, {
+    method: "DELETE",
+  });

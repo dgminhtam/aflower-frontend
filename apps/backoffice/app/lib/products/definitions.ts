@@ -15,6 +15,7 @@ export interface Product {
   image: Media;
   status: typeof STATUS_VALUES[number];
   gallery: Media[];
+  alternativeProducts?: Product[];
 }
 
 export type ProductResponse = Root<Product>;
@@ -23,7 +24,11 @@ export interface UpdateProductRequest {
   name: string;
   description: string;
   price: number;
-  categoryId: number;
+  originPrice: number;
+  status: string;
+  categoryIds: number[];
+  imageId: number | null;
+  gallery: number[];
 }
 
 export interface ChangeStatusRequest {

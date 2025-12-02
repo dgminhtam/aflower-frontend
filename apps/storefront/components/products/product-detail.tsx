@@ -174,5 +174,45 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 </div>
             </div>
         </div>
+        </div >
+
+        {/* Alternative Products Section */ }
+    {
+        product.alternativeProducts && product.alternativeProducts.length > 0 && (
+            <div className="mt-16">
+                <h2 className="text-2xl font-bold mb-6">Sản phẩm thay thế</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {product.alternativeProducts.map((altProduct) => (
+                        <a
+                            key={altProduct.id}
+                            href={`/products/${altProduct.sku}`}
+                            className="group block space-y-3"
+                        >
+                            <div className="relative aspect-square overflow-hidden rounded-lg border bg-background">
+                                <Image
+                                    src={altProduct.image?.urlMedium || "/placeholder.png"}
+                                    alt={altProduct.name}
+                                    fill
+                                    className="object-cover transition-transform group-hover:scale-105"
+                                />
+                            </div>
+                            <div>
+                                <h3 className="font-medium group-hover:text-primary transition-colors">
+                                    {altProduct.name}
+                                </h3>
+                                <p className="text-sm font-semibold text-primary mt-1">
+                                    {new Intl.NumberFormat("vi-VN", {
+                                        style: "currency",
+                                        currency: "VND",
+                                    }).format(altProduct.price)}
+                                </p>
+                            </div>
+                        </a>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+    </>
     );
 }

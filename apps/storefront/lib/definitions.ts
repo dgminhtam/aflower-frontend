@@ -60,6 +60,7 @@ export interface Product {
     categories: Category[];
     image: Media;
     gallery: Media[];
+    alternativeProducts?: Product[];
 }
 
 export interface Page<T> {
