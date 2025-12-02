@@ -34,6 +34,10 @@ export const siteConfig = {
             icon: BookOpen,
             items: [
                 {
+                    title: "Bài viết",
+                    url: "/blogs",
+                },
+                {
                     title: "Media",
                     url: "/medias",
                 },

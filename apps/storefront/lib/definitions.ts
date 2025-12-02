@@ -8,6 +8,37 @@ export interface Media {
     type: "IMAGE" | "VIDEO";
 }
 
+export interface BlogPost {
+    id: number;
+    title: string;
+    slug: string;
+    content: string;
+    shortDescription: string;
+    thumbnail: {
+        id: number;
+        url: string;
+        name: string;
+    };
+    isVisible: boolean;
+    publishedAt: string;
+    createdDate: string;
+    lastModifiedDate: string;
+}
+
+export interface BlogPostListResponse {
+    id: number;
+    title: string;
+    slug: string;
+    shortDescription: string;
+    thumbnail: {
+        id: number;
+        url: string;
+    };
+    isVisible: boolean;
+    publishedAt: string;
+    createdDate: string;
+}
+
 export interface Category {
     id: number;
     name: string;
