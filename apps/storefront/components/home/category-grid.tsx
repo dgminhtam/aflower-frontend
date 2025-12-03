@@ -15,7 +15,7 @@ export async function CategoryGrid() {
                 <h2 className="text-4xl font-serif font-medium text-primary mb-2">Categories</h2>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-20">
                 {categories.map((category) => (
                     <Link
                         key={category.id}

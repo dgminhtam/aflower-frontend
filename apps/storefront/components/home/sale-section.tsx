@@ -1,6 +1,7 @@
 "use client"
 
 import { ProductCard } from "@/components/ui/product-card"
+import { FLASH_SALE_PRODUCTS } from "@/lib/placeholder-data"
 import { Button } from "@workspace/ui/components/button"
 import {
     Carousel,
@@ -9,9 +10,9 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@workspace/ui/components/carousel"
-import { FLASH_SALE_PRODUCTS } from "@/lib/placeholder-data"
-import Link from "next/link"
 import { Great_Vibes } from "next/font/google"
+import Image from "next/image"
+import Link from "next/link"
 
 const greatVibes = Great_Vibes({
     subsets: ["latin"],
@@ -25,8 +26,7 @@ export function SaleSection() {
                 {/* Left Banner */}
                 <div className="relative h-full min-h-[400px] overflow-hidden rounded-2xl bg-[#FDF6F6] flex flex-col items-center justify-center text-center p-6 border border-[#F5E6E6]">
                     {/* Decorative Background Elements (Simulating the flower border) */}
-                    <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none bg-[url('https://images.unsplash.com/photo-1490750967868-58cb75069ed6?auto=format&fit=crop&q=80')] bg-cover bg-center" />
-
+                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none bg-[url('/home-sale-backgroud.webp')] bg-cover bg-center"></div>
                     <div className="relative z-10 space-y-4">
                         <p className="text-gray-600 font-medium">Giảm tới</p>
                         <h2 className="text-6xl font-bold text-[#A91B38]">20%</h2>

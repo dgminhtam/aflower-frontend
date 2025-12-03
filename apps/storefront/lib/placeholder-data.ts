@@ -113,7 +113,7 @@ export const FEATURED_PRODUCTS = [
 export const HERO_SLIDES = [
     {
         id: 1,
-        image: "https://pub-385a99dd700a4d468b195ab2a2b2b555.r2.dev/originals/image-3d6e5247-c90a-4196-8243-d3fe2e7df324.png",
+        image: "/banner_1.webp",
         title: "Trao gửi yêu thương",
         subtitle: "Những đóa hoa tươi thắm nhất cho người thân yêu",
         buttonText: "Mua ngay",
@@ -121,7 +121,7 @@ export const HERO_SLIDES = [
     },
     {
         id: 2,
-        image: "https://pub-385a99dd700a4d468b195ab2a2b2b555.r2.dev/originals/image-3d6e5247-c90a-4196-8243-d3fe2e7df324.png",
+        image: "/banner_1.webp",
         title: "Sinh nhật ý nghĩa",
         subtitle: "Ưu đãi 20% cho đơn hàng đặt trước",
         buttonText: "Xem chi tiết",

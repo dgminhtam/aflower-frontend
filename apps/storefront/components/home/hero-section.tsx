@@ -35,7 +35,6 @@ export function HeroSection() {
                                     className="object-cover"
                                     priority
                                 />
-                                <div className="absolute inset-0 bg-black/20" />
                                 <div className="absolute inset-0 flex items-center justify-center text-center">
                                     <div className="container px-4">
                                         <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-1000">

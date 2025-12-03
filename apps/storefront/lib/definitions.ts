@@ -140,3 +140,10 @@ export interface ProductCollectionDetailResponse extends ProductCollection {
     products: Product[];
 }
 
+export interface UserResponse {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    picture: string;
+}

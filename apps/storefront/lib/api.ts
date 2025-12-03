@@ -1,6 +1,22 @@
-import { Category, ProductResponse, SearchParams, Product, Page, ProductCollection, ProductCollectionDetailResponse, BlogPostListResponse, BlogPost } from "./definitions";
+"use server"
+
+import { auth } from "@clerk/nextjs/server";
+import { Category, ProductResponse, SearchParams, Product, Page, ProductCollection, ProductCollectionDetailResponse, BlogPostListResponse, BlogPost, UserResponse } from "./definitions";
 
 const API_TIMEOUT_MS = 10000;
+
+export async function getClerkToken(): Promise<string> {
+    const { getToken, userId } = await auth();
+    if (!userId) {
+        throw new Error('Chưa xác thực (User ID not found)');
+    }
+    const token = await getToken();
+    if (!token) {
+        throw new Error('Không lấy được token (getToken failed)');
+    }
+    console.log(token)
+    return token;
+}
 
 async function apiFetch<T>(
     urlPath: string,
@@ -74,7 +90,29 @@ export async function fetchPublic<T>(
     return apiFetch<T>(urlPath, options);
 }
 
-export const queryParamsToString = (params: SearchParams): string => {
+export async function fetchAuthenticated<T>(
+    urlPath: string,
+    options: RequestInit = {}
+): Promise<T> {
+
+    const token = await getClerkToken();
+
+    const authHeaders: Record<string, string> = {
+        Authorization: `Bearer ${token}`,
+    };
+
+    const finalOptions: RequestInit = {
+        ...options,
+        headers: {
+            ...authHeaders,
+            ...((options.headers || {}) as Record<string, string>),
+        },
+    };
+
+    return apiFetch<T>(urlPath, finalOptions);
+}
+
+const queryParamsToString = (params: SearchParams): string => {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
@@ -88,45 +126,49 @@ export const queryParamsToString = (params: SearchParams): string => {
     return searchParams.toString();
 };
 
-export const getProducts = (searchParams: SearchParams) => {
+export const getProducts = async (searchParams: SearchParams) => {
     const queryString = queryParamsToString(searchParams);
     return fetchPublic<ProductResponse>(`/storefront/products?${queryString}`);
 };
 
-export const getCategories = () => {
+export const getCategories = async () => {
     return fetchPublic<Category[]>(`/storefront/categories`);
 };
 
-export const getCategoriesTree = () => {
+export const getCategoriesTree = async () => {
     return fetchPublic<Category[]>(`/storefront/categories/tree`);
 };
 
-export const getRootCategories = () => {
+export const getRootCategories = async () => {
     return fetchPublic<Category[]>("/storefront/categories/root");
 };
 
-export const getProductBySlug = (slug: string) => {
+export const getProductBySlug = async (slug: string) => {
     return fetchPublic<Product>(`/storefront/products/${slug}`);
 };
 
-export const getProductBySku = (sku: string) => {
+export const getProductBySku = async (sku: string) => {
     return fetchPublic<Product>(`/storefront/products/${sku}`);
 };
 
-export const getProductCollections = (searchParams: SearchParams) => {
+export const getProductCollections = async (searchParams: SearchParams) => {
     const queryString = queryParamsToString(searchParams);
     return fetchPublic<Page<ProductCollection>>(`/storefront/product-collections?${queryString}`);
 };
 
-export const getProductCollectionBySlug = (slug: string) => {
+export const getProductCollectionBySlug = async (slug: string) => {
     return fetchPublic<ProductCollectionDetailResponse>(`/storefront/product-collections/${slug}`);
 };
 
-export const getBlogs = (searchParams: SearchParams) => {
+export const getBlogs = async (searchParams: SearchParams) => {
     const queryString = queryParamsToString(searchParams);
     return fetchPublic<Page<BlogPostListResponse>>(`/storefront/blogs?${queryString}`);
 };
 
-export const getBlogBySlug = (slug: string) => {
+export const getBlogBySlug = async (slug: string) => {
     return fetchPublic<BlogPost>(`/storefront/blogs/${slug}`);
+};
+
+export const getUserProfile = async () => {
+    return fetchAuthenticated<UserResponse>(`/storefront/users/profile`);
 };

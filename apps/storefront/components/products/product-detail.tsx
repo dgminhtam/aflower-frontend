@@ -42,177 +42,178 @@ export function ProductDetail({ product }: ProductDetailProps) {
     const images = [product.image, ...(product.gallery || [])].filter(Boolean);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-            {/* Left Column: Gallery */}
-            <div className="space-y-4">
-                <div className="relative aspect-square overflow-hidden rounded-xl border bg-background">
-                    <Image
-                        src={selectedImage}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                        priority
-                    />
-                </div>
-                {images.length > 1 && (
-                    <div className="flex gap-4 overflow-x-auto pb-2">
-                        {images.map((img, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setSelectedImage(img.urlLarge)}
-                                className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-all ${selectedImage === img.urlLarge
-                                    ? "border-primary ring-2 ring-primary ring-offset-2"
-                                    : "border-transparent hover:border-muted-foreground"
-                                    }`}
-                            >
-                                <Image
-                                    src={img.urlMedium}
-                                    alt={`${product.name} thumbnail ${index + 1}`}
-                                    fill
-                                    className="object-cover"
-                                />
-                            </button>
-                        ))}
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                {/* Left Column: Gallery */}
+                <div className="space-y-4">
+                    <div className="relative aspect-square overflow-hidden rounded-xl border bg-background">
+                        <Image
+                            src={selectedImage}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
                     </div>
-                )}
-            </div>
+                    {images.length > 1 && (
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                            {images.map((img, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setSelectedImage(img.urlLarge)}
+                                    className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-all ${selectedImage === img.urlLarge
+                                        ? "border-primary ring-2 ring-primary ring-offset-2"
+                                        : "border-transparent hover:border-muted-foreground"
+                                        }`}
+                                >
+                                    <Image
+                                        src={img.urlMedium}
+                                        alt={`${product.name} thumbnail ${index + 1}`}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
-            {/* Right Column: Product Info */}
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                        {product.name}
-                    </h1>
-                    <div className="mt-4 flex items-end gap-4">
-                        <p className="text-3xl font-bold text-primary">
-                            {new Intl.NumberFormat("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                            }).format(product.price)}
-                        </p>
-                        {product.originPrice > product.price && (
-                            <p className="text-xl text-muted-foreground line-through mb-1">
+                {/* Right Column: Product Info */}
+                <div className="space-y-6">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                            {product.name}
+                        </h1>
+                        <div className="mt-4 flex items-end gap-4">
+                            <p className="text-3xl font-bold text-primary">
                                 {new Intl.NumberFormat("vi-VN", {
                                     style: "currency",
                                     currency: "VND",
-                                }).format(product.originPrice)}
+                                }).format(product.price)}
                             </p>
-                        )}
+                            {product.originPrice > product.price && (
+                                <p className="text-xl text-muted-foreground line-through mb-1">
+                                    {new Intl.NumberFormat("vi-VN", {
+                                        style: "currency",
+                                        currency: "VND",
+                                    }).format(product.originPrice)}
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                <div className="prose prose-sm text-muted-foreground">
-                    <p>{product.description}</p>
-                </div>
+                    <div className="prose prose-sm text-muted-foreground">
+                        <p>{product.description}</p>
+                    </div>
 
-                <div className="space-y-4 pt-6 border-t">
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium">Số lượng:</span>
-                        <div className="flex items-center rounded-md border">
+                    <div className="space-y-4 pt-6 border-t">
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium">Số lượng:</span>
+                            <div className="flex items-center rounded-md border">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-none rounded-l-md"
+                                    onClick={() => handleQuantityChange(quantity - 1)}
+                                    disabled={quantity <= 1}
+                                >
+                                    <Minus className="h-4 w-4" />
+                                </Button>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={quantity}
+                                    onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                                    className="h-9 w-14 rounded-none border-0 text-center focus-visible:ring-0"
+                                />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-none rounded-r-md"
+                                    onClick={() => handleQuantityChange(quantity + 1)}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4">
                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 rounded-none rounded-l-md"
-                                onClick={() => handleQuantityChange(quantity - 1)}
-                                disabled={quantity <= 1}
+                                size="lg"
+                                className="flex-1 gap-2 text-base"
+                                onClick={handleAddToCart}
+                                disabled={isLoading}
                             >
-                                <Minus className="h-4 w-4" />
+                                <ShoppingCart className="h-5 w-5" />
+                                Thêm vào giỏ hàng
                             </Button>
-                            <Input
-                                type="number"
-                                min={1}
-                                value={quantity}
-                                onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                                className="h-9 w-14 rounded-none border-0 text-center focus-visible:ring-0"
-                            />
                             <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 rounded-none rounded-r-md"
-                                onClick={() => handleQuantityChange(quantity + 1)}
+                                size="lg"
+                                variant="outline"
+                                className="flex-1 text-base border-primary text-primary hover:bg-primary/10"
+                                onClick={handleBuyNow}
                             >
-                                <Plus className="h-4 w-4" />
+                                Mua ngay
                             </Button>
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <Button
-                            size="lg"
-                            className="flex-1 gap-2 text-base"
-                            onClick={handleAddToCart}
-                            disabled={isLoading}
-                        >
-                            <ShoppingCart className="h-5 w-5" />
-                            Thêm vào giỏ hàng
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="flex-1 text-base border-primary text-primary hover:bg-primary/10"
-                            onClick={handleBuyNow}
-                        >
-                            Mua ngay
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Additional Info / Policies */}
-                <div className="grid grid-cols-1 gap-4 pt-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
-                        <span>Giao hàng miễn phí cho đơn hàng trên 500k</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
-                        <span>Đổi trả trong vòng 24h nếu hoa hư hỏng</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
-                        <span>Tặng kèm thiệp chúc mừng</span>
+                    {/* Additional Info / Policies */}
+                    <div className="grid grid-cols-1 gap-4 pt-6 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                            <span>Giao hàng miễn phí cho đơn hàng trên 500k</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                            <span>Đổi trả trong vòng 24h nếu hoa hư hỏng</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                            <span>Tặng kèm thiệp chúc mừng</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        </div >
 
-        {/* Alternative Products Section */ }
-    {
-        product.alternativeProducts && product.alternativeProducts.length > 0 && (
-            <div className="mt-16">
-                <h2 className="text-2xl font-bold mb-6">Sản phẩm thay thế</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {product.alternativeProducts.map((altProduct) => (
-                        <a
-                            key={altProduct.id}
-                            href={`/products/${altProduct.sku}`}
-                            className="group block space-y-3"
-                        >
-                            <div className="relative aspect-square overflow-hidden rounded-lg border bg-background">
-                                <Image
-                                    src={altProduct.image?.urlMedium || "/placeholder.png"}
-                                    alt={altProduct.name}
-                                    fill
-                                    className="object-cover transition-transform group-hover:scale-105"
-                                />
-                            </div>
-                            <div>
-                                <h3 className="font-medium group-hover:text-primary transition-colors">
-                                    {altProduct.name}
-                                </h3>
-                                <p className="text-sm font-semibold text-primary mt-1">
-                                    {new Intl.NumberFormat("vi-VN", {
-                                        style: "currency",
-                                        currency: "VND",
-                                    }).format(altProduct.price)}
-                                </p>
-                            </div>
-                        </a>
-                    ))}
-                </div>
-            </div>
-        )
-    }
-    </>
+
+            {/* Alternative Products Section */}
+            {
+                product.alternativeProducts && product.alternativeProducts.length > 0 && (
+                    <div className="mt-16">
+                        <h2 className="text-2xl font-bold mb-6">Sản phẩm thay thế</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {product.alternativeProducts.map((altProduct) => (
+                                <a
+                                    key={altProduct.id}
+                                    href={`/products/${altProduct.sku}`}
+                                    className="group block space-y-3"
+                                >
+                                    <div className="relative aspect-square overflow-hidden rounded-lg border bg-background">
+                                        <Image
+                                            src={altProduct.image?.urlMedium || "/placeholder.png"}
+                                            alt={altProduct.name}
+                                            fill
+                                            className="object-cover transition-transform group-hover:scale-105"
+                                        />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium group-hover:text-primary transition-colors">
+                                            {altProduct.name}
+                                        </h3>
+                                        <p className="text-sm font-semibold text-primary mt-1">
+                                            {new Intl.NumberFormat("vi-VN", {
+                                                style: "currency",
+                                                currency: "VND",
+                                            }).format(altProduct.price)}
+                                        </p>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )
+            }
+        </>
     );
 }
