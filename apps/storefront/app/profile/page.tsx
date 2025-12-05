@@ -1,49 +1,30 @@
 import { getUserProfile } from "@/lib/api";
-import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Suspense } from "react";
 import { UserProfileDisplay } from "@/components/profile/user-profile-display";
+import Link from "next/link";
+import { SignOutButton } from "@clerk/nextjs";
 
 export default async function ProfilePage() {
-    return (
-        <div className="container mx-auto px-4 py-12">
-            <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                    <CardTitle>Thông tin cá nhân</CardTitle>
-                </CardHeader>
-
-                <Suspense fallback={<ProfileSkeleton />}>
-                    <FetchUserData />
-                </Suspense>
-            </Card>
-        </div>
-    );
-}
-
-async function FetchUserData() {
     const user = await getUserProfile();
 
-    return (
-        <CardContent className="space-y-6">
-            <UserProfileDisplay user={user} />
-        </CardContent>
-    );
-}
+    if (!user) return null;
 
-function ProfileSkeleton() {
+    const displayName = user.firstName ? `${user.firstName} ${user.lastName}` : user.email.split('@')[0];
+
     return (
-        <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Skeleton className="h-20 w-20 rounded-full" />
-                <div className="space-y-2 flex-1">
-                    <Skeleton className="h-6 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                </div>
+        <div>
+            <UserProfileDisplay user={user} />
+
+            <div className="space-y-4 text-sm">
+                <p className="text-muted-foreground">
+                    Xin chào <span className="font-medium text-foreground">{displayName}</span> (không phải <span className="font-medium text-foreground">{displayName}</span>? <SignOutButton><button className="text-primary hover:underline font-medium">Đăng xuất</button></SignOutButton>)
+                </p>
+
+                <p className="text-muted-foreground leading-relaxed">
+                    Từ bảng điều khiển tài khoản của bạn, bạn có thể xem các <Link href="/profile/orders" className="text-primary hover:underline">đơn hàng gần đây</Link>,
+                    quản lý <Link href="/profile/address" className="text-primary hover:underline">địa chỉ giao hàng và thanh toán</Link> của mình,
+                    và <Link href="/profile/account" className="text-primary hover:underline">chỉnh sửa mật khẩu và chi tiết tài khoản</Link>.
+                </p>
             </div>
-            <div className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-            </div>
-        </CardContent>
+        </div>
     );
 }

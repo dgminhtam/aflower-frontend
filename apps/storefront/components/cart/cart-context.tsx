@@ -54,7 +54,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         try {
             const updatedCart = await CartAPI.addToCart(link, item);
             setCart(updatedCart);
-            setIsOpen(true); // Open cart sheet on add
+            setIsOpen(true);
             toast.success("Đã thêm vào giỏ hàng!");
         } catch (error) {
             console.error("Failed to add to cart:", error);
